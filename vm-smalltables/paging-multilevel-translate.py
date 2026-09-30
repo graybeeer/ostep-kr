@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import sys
@@ -103,7 +104,7 @@ class OS:
         valid   = (pte & 0x80) >> 7
         pfn     = (pte & 0x7f)
         if printStuff == True:
-            print('    --> pte index:0x%x [decimal %d] pte contents:0x%x (valid %d, pfn 0x%02x [decimal %d])' % (pteBits, pteBits, pte, valid, pfn, pfn))
+            print('    --> PTE 인덱스:0x%x [십진수 %d] 항목 값:0x%x (유효 비트 %d, PFN 0x%02x [십진수 %d])' % (pteBits, pteBits, pte, valid, pfn, pfn))
         return (valid, pfn, pteAddr)
 
     def getPageDirEntry(self, pid, virtualAddr, printStuff):
@@ -114,7 +115,7 @@ class OS:
         valid   = (pde & 0x80) >> 7
         ptPtr   = (pde & 0x7f)
         if printStuff == True:
-            print('  --> pde index:0x%x [decimal %d] pde contents:0x%x (valid %d, pfn 0x%02x [decimal %d])' % (pdeBits, pdeBits, pde, valid, ptPtr, ptPtr))
+            print('  --> PDE 인덱스:0x%x [십진수 %d] 항목 값:0x%x (유효 비트 %d, PFN 0x%02x [십진수 %d])' % (pdeBits, pdeBits, pde, valid, ptPtr, ptPtr))
         return (valid, ptPtr, pdeAddr)
 
     def setPageTableEntry(self, pteAddr, physicalPage):
@@ -195,7 +196,7 @@ class OS:
 
     def memoryDump(self):
         for i in range(0, int(self.physMem / self.pageSize)):
-            print('page %3d:' %  i, end='')
+            print('페이지 %3d:' %  i, end='')
             for j in range(0, self.pageSize):
                 print('%02x' % self.memory[(i * self.pageSize) + j], end='')
             print('')
@@ -220,19 +221,27 @@ class OS:
 # main program
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed', default=0, help='the random seed', action='store', type='int', dest='seed')
-parser.add_option('-a', '--allocated', default=64, help='number of virtual pages allocated',
+parser.add_option('-s', '--seed', default=0, help='난수 시드 (같은 값으로 같은 문제 재현)', action='store', type='int', dest='seed')
+parser.add_option('-a', '--allocated', default=64, help='할당할 가상 페이지 수',
                   action='store', type='int', dest='allocated')
-parser.add_option('-n', '--addresses', default=10, help='number of virtual addresses to generate',
+parser.add_option('-n', '--addresses', default=10, help='생성할 가상 주소 수',
                   action='store', type='int', dest='num')
-parser.add_option('-c', '--solve', help='compute answers for me', action='store_true', default=False, dest='solve')
+parser.add_option('-c', '--solve', help='정답과 계산 결과 표시', action='store_true', default=False, dest='solve')
 
 
 (options, args) = parser.parse_args()
 
-print('ARG seed', options.seed)
-print('ARG allocated',  options.allocated)
-print('ARG num',  options.num)
+print("""
+[각주: 출력 읽는 법]
+  - PDBR은 페이지 디렉터리가 놓인 물리 페이지 번호입니다. PDE는 디렉터리 항목, PTE는 페이지 테이블 항목입니다.
+  - 가상 주소를 디렉터리 인덱스·테이블 인덱스·오프셋으로 나누고 PDBR → PDE → PTE → 데이터 순서로 따라가세요.
+  - valid는 유효 비트, PFN은 다음 단계의 물리 페이지 번호입니다. 어느 단계든 유효 비트가 0이면 이 문제에서는 주소 변환 실패입니다.
+  - 마지막 값(Value)은 물리 주소 자체가 아니라 그 주소에 저장된 데이터입니다. 이 시뮬레이터의 페이지 크기는 32바이트입니다.
+""")
+
+print('설정 난수 시드 (seed)', options.seed)
+print('설정 할당할 가상 페이지 수 (allocated)',  options.allocated)
+print('설정 생성할 주소 수 (num)',  options.num)
 print('')
 
 random_seed(options.seed)
@@ -243,7 +252,7 @@ used = os.procAlloc(1, options.allocated)
 
 os.memoryDump()
 
-print('\nPDBR:', os.getPDBR(1), ' (decimal) [This means the page directory is held in this page]\n')
+print('\n페이지 디렉터리 기준 레지스터(PDBR):', os.getPDBR(1), ' (십진수) [페이지 디렉터리가 저장된 물리 페이지 번호]\n')
 
 for i in range(0, options.num):
     if (random.random() * 100) > 50.0 or i >= len(used):
@@ -251,16 +260,16 @@ for i in range(0, options.num):
     else:
         vaddr = (used[i] << 5) | int(random.random() * 32)
     if options.solve == True:
-        print('Virtual Address 0x%04x:' % vaddr)
+        print('가상 주소 0x%04x:' % vaddr)
         r = os.translate(1, vaddr)
         if r > -1:
-            print('      --> Translates to Physical Address 0x%03x --> Value: 0x%02x' % (r, os.getValue(r)))
+            print('      --> 물리 주소 0x%03x로 변환 --> 저장된 값: 0x%02x' % (r, os.getValue(r)))
         elif r == -1:
-            print('      --> Fault (page directory entry not valid)')
+            print('      --> 주소 변환 실패 (페이지 디렉터리 항목이 유효하지 않음)')
         else:
-            print('      --> Fault (page table entry not valid)')
+            print('      --> 주소 변환 실패 (페이지 테이블 항목이 유효하지 않음)')
     else:
-        print('Virtual Address %04x: Translates To What Physical Address (And Fetches what Value)? Or Fault?' % vaddr)
+        print('가상 주소 %04x: 물리 주소와 저장된 값은? 또는 주소 변환 실패인가요?' % vaddr)
 
 print('')
 

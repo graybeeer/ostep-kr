@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 from collections import *
@@ -39,7 +40,7 @@ class ssd:
         elif ssd_type == 'ideal':
             self.ssd_type = self.TYPE_IDEAL
         else:
-            print('bad SSD type (%s)' % ssd_type)
+            print('잘못된 SSD 유형 (%s)' % ssd_type)
             exit(1)
         
         # size
@@ -262,8 +263,8 @@ class ssd:
             for page in live_pages:
                 # live: so copy it someplace new
                 if self.gc_trace:
-                    print('gc %d:: read(physical_page=%d)' % (self.gc_count, page))
-                    print('gc %d:: write()' % self.gc_count)
+                    print('공간 회수 %d:: 읽기(물리 페이지=%d)' % (self.gc_count, page))
+                    print('공간 회수 %d:: 쓰기()' % self.gc_count)
                 data = self.physical_read(page)
                 self.write(self.reverse_map[page], data)
 
@@ -272,7 +273,7 @@ class ssd:
             self.physical_erase(block)
 
             if self.gc_trace:
-                print('gc %d:: erase(block=%d)' % (self.gc_count, block))
+                print('공간 회수 %d:: 지우기(블록=%d)' % (self.gc_count, block))
                 if self.show_state:
                     print('')
                     self.dump()
@@ -336,42 +337,42 @@ class ssd:
         elif s == self.STATE_VALID:
             return 'v'
         else:
-            print('bad state %d' % s)
+            print('잘못된 상태 %d' % s)
             exit(1)
 
     def stats(self):
-        print('Physical Operations Per Block')
-        print('Erases ', end='')
+        print('블록별 물리 동작 수')
+        print('지우기 ', end='')
         for i in range(self.num_blocks):
             print('%3d        ' % self.physical_erase_count[i], end='')
-        print('  Sum: %d' % self.physical_erase_sum)
+        print('  합계: %d' % self.physical_erase_sum)
 
-        print('Writes ', end='')
+        print('쓰기   ', end='')
         for i in range(self.num_blocks):
             print('%3d        ' % self.physical_write_count[i], end='')
-        print('  Sum: %d' % self.physical_write_sum)
+        print('  합계: %d' % self.physical_write_sum)
 
-        print('Reads  ', end='')
+        print('읽기   ', end='')
         for i in range(self.num_blocks):
             print('%3d        ' % self.physical_read_count[i], end='')
-        print('  Sum: %d' % self.physical_read_sum)
+        print('  합계: %d' % self.physical_read_sum)
         print('')
-        print('Logical Operation Sums')
-        print('  Write count %d (%d failed)' % (self.logical_write_sum, self.logical_write_fail_sum))
-        print('  Read count  %d (%d failed)' % (self.logical_read_sum, self.logical_read_fail_sum))
-        print('  Trim count  %d (%d failed)' % (self.logical_trim_sum, self.logical_trim_fail_sum))
+        print('논리 동작 합계')
+        print('  쓰기 횟수 %d (실패 %d)' % (self.logical_write_sum, self.logical_write_fail_sum))
+        print('  읽기 횟수 %d (실패 %d)' % (self.logical_read_sum, self.logical_read_fail_sum))
+        print('  해제(trim) 횟수 %d (실패 %d)' % (self.logical_trim_sum, self.logical_trim_fail_sum))
         print('')
-        print('Times')
-        print('  Erase time %.2f' % (self.physical_erase_sum * self.block_erase_time))
-        print('  Write time %.2f' % (self.physical_write_sum * self.page_program_time))
-        print('  Read time  %.2f' % (self.physical_read_sum * self.page_read_time))
+        print('소요 시간 (마이크로초)')
+        print('  지우기 시간 %.2f' % (self.physical_erase_sum * self.block_erase_time))
+        print('  쓰기 시간 %.2f' % (self.physical_write_sum * self.page_program_time))
+        print('  읽기 시간 %.2f' % (self.physical_read_sum * self.page_read_time))
         total_time = self.physical_erase_sum * self.block_erase_time + self.physical_write_sum * self.page_program_time + self.physical_read_sum * self.page_read_time
-        print('  Total time %.2f' % total_time)
+        print('  전체 시간 %.2f' % total_time)
         return
 
     def dump(self):
         # FTL
-        print('FTL   ', end='')
+        print('FTL    ', end='')
         count = 0
         ftl_columns = int((self.pages_per_block * self.num_blocks) / 7)
         for i in range(self.num_logical_pages):
@@ -382,11 +383,11 @@ class ssd:
             if count > 0 and count % ftl_columns == 0:
                 print('\n      ', end='')
         if count == 0:
-            print('(empty)', end='')
+            print('(비어 있음)', end='')
         print('')
 
         # FLASH?
-        print('Block ', end='')
+        print('블록  ', end='')
         for i in range(self.num_blocks):
             out_str = '%d' % i
             print(out_str + ' ' * (self.pages_per_block - len(out_str) + 1), end='')
@@ -395,7 +396,7 @@ class ssd:
         max_len = len(str(self.num_pages))
         for n in range(max_len, 0, -1):
             if n == max_len:
-                print('Page  ', end='')
+                print('페이지', end='')
             else:
                 print('      ', end='')
             for i in range(self.num_pages):
@@ -405,7 +406,7 @@ class ssd:
                     print(end=' ')
             print('')
 
-        print('State ', end='')
+        print('상태  ', end='')
         for i in range(self.num_pages):
             print('%s' % self.printable_state(self.state[i]), end='')
             if i > 0 and (i+1) % 10 == 0:
@@ -413,7 +414,7 @@ class ssd:
         print('')
 
         # DATA
-        print('Data  ', end='')
+        print('데이터', end='')
         for i in range(self.num_pages):
             if self.state[i] == self.STATE_VALID:
                 print('%s' % self.data[i], end='')
@@ -424,7 +425,7 @@ class ssd:
         print('')
 
         # LIVE
-        print('Live  ', end='')
+        print('유효  ', end='')
         for i in range(self.num_pages):
             if self.state[i] == self.STATE_VALID and self.forward_map[self.reverse_map[i]] == i:
                 print('+', end='')
@@ -442,55 +443,55 @@ class ssd:
 # MAIN PROGRAM
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed',            default=0,          help='the random seed',                         action='store', type='int',    dest='seed')
-parser.add_option('-n', '--num_cmds',        default=10,         help='number of commands to randomly generate', action='store', type='int',    dest='num_cmds')
-parser.add_option('-P', '--op_percentages',  default='40/50/10', help='if rand, percent of reads/writes/trims',  action='store', type='string', dest='op_percentages')
-parser.add_option('-K', '--skew',            default='',         help='if non-empty, skew, e.g., 80/20: 80% of ops to 20% of blocks', action='store', type='string', dest='skew')
-parser.add_option('-k', '--skew_start',      default=0,          help='if --skew, skew after this many writes',  action='store', type='int',    dest='skew_start')
-parser.add_option('-r', '--read_fails',      default=0,          help='if rand, percent of reads that can fail', action='store', type='int',    dest='read_fail')
-parser.add_option('-L', '--cmd_list',        default='',         help='comma-separated list of commands (e.g., r10,w20:a)', action='store', type='string', dest='cmd_list')
-parser.add_option('-T', '--ssd_type',        default='direct',   help='SSD type: ideal, direct, log',            action='store', type='string', dest='ssd_type')
-parser.add_option('-l', '--logical_pages',   default=50,         help='number of logical pages in interface',    action='store', type='int',    dest='num_logical_pages')
-parser.add_option('-B', '--num_blocks',      default=7,          help='number of physical blocks in SSD',        action='store', type='int',    dest='num_blocks')
-parser.add_option('-p', '--pages_per_block', default=10,         help='pages per physical block',                action='store', type='int',    dest='pages_per_block')
-parser.add_option('-G', '--high_water_mark', default=10,         help='blocks used before gc trigger',           action='store', type='int',    dest='high_water_mark')
-parser.add_option('-g', '--low_water_mark',  default=8,          help='gc target before stopping gc',            action='store', type='int',    dest='low_water_mark')
-parser.add_option('-R', '--read_time',       default=10,         help='page read time (usecs)',                  action='store', type='int',    dest='read_time')
-parser.add_option('-W', '--program_time',    default=40,         help='page program time (usecs)',               action='store', type='int',    dest='program_time')
-parser.add_option('-E', '--erase_time',      default=1000,       help='page erase time (usecs)',                 action='store', type='int',    dest='erase_time')
-parser.add_option('-J', '--show_gc',         default=False,      help='show garbage collector behavior',         action='store_true',           dest='show_gc')
-parser.add_option('-F', '--show_state',      default=False,      help='show flash state',                        action='store_true',           dest='show_state')
-parser.add_option('-C', '--show_cmds',       default=False,      help='show commands',                           action='store_true',           dest='show_cmds')
-parser.add_option('-q', '--quiz_cmds',       default=False,      help='quiz commands',                           action='store_true',           dest='quiz_cmds')
-parser.add_option('-S', '--show_stats',      default=False,      help='show statistics',                         action='store_true',           dest='show_stats')
-parser.add_option('-c', '--compute',         default=False,      help='compute answers for me',                  action='store_true',           dest='solve')
+parser.add_option('-s', '--seed',            default=0,          help='난수 시드 (같은 값으로 같은 문제 재현)',                         action='store', type='int',    dest='seed')
+parser.add_option('-n', '--num_cmds',        default=10,         help='임의 생성할 명령 수', action='store', type='int',    dest='num_cmds')
+parser.add_option('-P', '--op_percentages',  default='40/50/10', help='임의 생성 시 읽기/쓰기/해제 비율',  action='store', type='string', dest='op_percentages')
+parser.add_option('-K', '--skew',            default='',         help='접근 편중 지정 (예: 80/20은 동작의 80%가 블록의 20%에 집중)', action='store', type='string', dest='skew')
+parser.add_option('-k', '--skew_start',      default=0,          help='--skew 사용 시 이만큼 쓴 후부터 접근 편중 적용',  action='store', type='int',    dest='skew_start')
+parser.add_option('-r', '--read_fails',      default=0,          help='임의 생성 시 실패할 수 있는 읽기 비율', action='store', type='int',    dest='read_fail')
+parser.add_option('-L', '--cmd_list',        default='',         help='쉼표로 구분한 명령 목록 (예: r10,w20:a)', action='store', type='string', dest='cmd_list')
+parser.add_option('-T', '--ssd_type',        default='direct',   help='SSD 유형: ideal (이상적), direct (직접 갱신), log (로그 방식)',            action='store', type='string', dest='ssd_type')
+parser.add_option('-l', '--logical_pages',   default=50,         help='논리 페이지 수',    action='store', type='int',    dest='num_logical_pages')
+parser.add_option('-B', '--num_blocks',      default=7,          help='SSD의 물리 블록 수',        action='store', type='int',    dest='num_blocks')
+parser.add_option('-p', '--pages_per_block', default=10,         help='물리 블록당 페이지 수',                action='store', type='int',    dest='pages_per_block')
+parser.add_option('-G', '--high_water_mark', default=10,         help='공간 회수를 시작하는 사용 블록 수 기준',           action='store', type='int',    dest='high_water_mark')
+parser.add_option('-g', '--low_water_mark',  default=8,          help='공간 회수를 중단하는 사용 블록 수 목표',            action='store', type='int',    dest='low_water_mark')
+parser.add_option('-R', '--read_time',       default=10,         help='페이지 읽기 시간 (마이크로초)',                  action='store', type='int',    dest='read_time')
+parser.add_option('-W', '--program_time',    default=40,         help='페이지 쓰기 시간 (마이크로초)',               action='store', type='int',    dest='program_time')
+parser.add_option('-E', '--erase_time',      default=1000,       help='블록 지우기 시간 (마이크로초)',                 action='store', type='int',    dest='erase_time')
+parser.add_option('-J', '--show_gc',         default=False,      help='공간 회수(GC) 동작 표시',         action='store_true',           dest='show_gc')
+parser.add_option('-F', '--show_state',      default=False,      help='플래시 메모리 상태 표시',                        action='store_true',           dest='show_state')
+parser.add_option('-C', '--show_cmds',       default=False,      help='명령 표시',                           action='store_true',           dest='show_cmds')
+parser.add_option('-q', '--quiz_cmds',       default=False,      help='수행된 명령을 맞히는 문제 표시',                           action='store_true',           dest='quiz_cmds')
+parser.add_option('-S', '--show_stats',      default=False,      help='통계 표시',                         action='store_true',           dest='show_stats')
+parser.add_option('-c', '--compute',         default=False,      help='정답과 계산 결과 표시',                  action='store_true',           dest='solve')
 
 (options, args) = parser.parse_args()
 
 random_seed(options.seed)
 
-print('ARG seed %s' % options.seed)
-print('ARG num_cmds %s' % options.num_cmds)
-print('ARG op_percentages %s' % options.op_percentages)
-print('ARG skew %s' % options.skew)
-print('ARG skew_start %s' % options.skew_start)
-print('ARG read_fail %s' % options.read_fail)
-print('ARG cmd_list %s' % options.cmd_list)
-print('ARG ssd_type %s' % options.ssd_type)
-print('ARG num_logical_pages %s' % options.num_logical_pages)
-print('ARG num_blocks %s' % options.num_blocks)
-print('ARG pages_per_block %s' % options.pages_per_block)
-print('ARG high_water_mark %s' % options.high_water_mark)
-print('ARG low_water_mark %s' % options.low_water_mark)
-print('ARG erase_time %s' % options.erase_time)
-print('ARG program_time %s' % options.program_time)
-print('ARG read_time %s' % options.read_time)
-print('ARG show_gc %s' % options.show_gc)
-print('ARG show_state %s' % options.show_state)
-print('ARG show_cmds %s' % options.show_cmds)
-print('ARG quiz_cmds %s' % options.quiz_cmds)
-print('ARG show_stats %s' % options.show_stats)
-print('ARG compute %s' % options.solve)
+print('설정 난수 시드 (seed) %s' % options.seed)
+print('설정 명령 수 (num_cmds) %s' % options.num_cmds)
+print('설정 읽기/쓰기/해제 비율 (op_percentages) %s' % options.op_percentages)
+print('설정 접근 편중 (skew) %s' % options.skew)
+print('설정 접근 편중 시작 시점 (skew_start) %s' % options.skew_start)
+print('설정 실패 가능한 읽기 비율 (read_fail) %s' % options.read_fail)
+print('설정 명령 목록 (cmd_list) %s' % options.cmd_list)
+print('설정 SSD 유형 (ssd_type) %s' % options.ssd_type)
+print('설정 논리 페이지 수 (num_logical_pages) %s' % options.num_logical_pages)
+print('설정 물리 블록 수 (num_blocks) %s' % options.num_blocks)
+print('설정 블록당 페이지 수 (pages_per_block) %s' % options.pages_per_block)
+print('설정 공간 회수 시작 기준 (high_water_mark) %s' % options.high_water_mark)
+print('설정 공간 회수 중단 목표 (low_water_mark) %s' % options.low_water_mark)
+print('설정 블록 지우기 시간 (erase_time) %s' % options.erase_time)
+print('설정 페이지 쓰기 시간 (program_time) %s' % options.program_time)
+print('설정 페이지 읽기 시간 (read_time) %s' % options.read_time)
+print('설정 공간 회수 동작 표시 (show_gc) %s' % options.show_gc)
+print('설정 상태 표시 (show_state) %s' % options.show_state)
+print('설정 명령 표시 (show_cmds) %s' % options.show_cmds)
+print('설정 명령 맞히기 (quiz_cmds) %s' % options.quiz_cmds)
+print('설정 통계 표시 (show_stats) %s' % options.show_stats)
+print('설정 정답 표시 (compute) %s' % options.solve)
 print('')
 
 s = ssd(ssd_type=options.ssd_type,
@@ -507,7 +508,7 @@ if options.skew != '':
     hot_cold = True
     skew = options.skew.split('/')
     if len(skew) != 2:
-        print('bad skew specification; should be 80/20 or something like that')
+        print('접근 편중 형식 오류: 80/20과 같은 형식으로 지정하세요')
         exit(1)
     hot_percent = int(skew[0])/100.0
     hot_target = int(skew[1])/100.0
@@ -520,7 +521,7 @@ if options.cmd_list == '':
     assert(len(p) == 3)
     percent_reads, percent_writes, percent_trims = int(p[0]), int(p[1]), int(p[2])
     if percent_writes <= 0:
-        print('must have some writes, otherwise nothing in the SSD!')
+        print('SSD에 데이터가 생기도록 쓰기 비율이 0보다 커야 합니다!')
         exit(1)
     
     printable = string.digits + string.ascii_lowercase + string.ascii_uppercase
@@ -580,9 +581,9 @@ for cmd in cmd_list:
         address = int(cmd.split('r')[1])
         data = s.read(address)
         if show_cmds or (quiz_cmds and options.solve):
-            print('cmd %3d:: read(%d) -> %s' % (op, address, data))
+            print('명령 %3d:: 읽기(%d) -> %s' % (op, address, data))
         elif quiz_cmds:
-            print('cmd %3d:: read(%d) -> ??' % (op, address))
+            print('명령 %3d:: 읽기(%d) -> ??' % (op, address))
         op += 1
     elif cmd[0] == 'w':
         # w80:b
@@ -591,17 +592,17 @@ for cmd in cmd_list:
         data = parts[1]
         rc = s.write(address, data)
         if show_cmds or (quiz_cmds and options.solve):
-            print('cmd %3d:: write(%d, %s) -> %s' % (op, address, data, rc))
+            print('명령 %3d:: 쓰기(%d, %s) -> %s' % (op, address, data, rc))
         elif quiz_cmds:
-            print('cmd %3d:: command(??) -> ??' % op)
+            print('명령 %3d:: 어떤 동작(??) -> ??' % op)
         op += 1
     elif cmd[0] == 't':
         address = int(cmd.split('t')[1])
         rc = s.trim(address)
         if show_cmds or (quiz_cmds and options.solve):
-            print('cmd %3d:: trim(%d) -> %s' % (op, address, rc))
+            print('명령 %3d:: 해제(%d) -> %s' % (op, address, rc))
         elif quiz_cmds:
-            print('cmd %d:: command(??) -> ??' % op)
+            print('명령 %d:: 어떤 동작(??) -> ??' % op)
         op += 1
 
     if show_state:
@@ -620,3 +621,13 @@ if options.show_stats:
     s.stats()
     print('')
 
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - FTL은 논리 페이지 번호:물리 페이지 번호의 대응표입니다. 페이지 상태 i는 초기 무효, E는 지워짐, v는 기록됨을 뜻합니다.
+  - 유효(Live) 행의 +는 현재 논리 주소가 참조하는 페이지입니다. v라도 덮어쓴 이전 사본이면 더 이상 유효한 데이터가 아닐 수 있습니다.
+  - success는 성공, failure는 실패입니다. trim은 논리 주소의 데이터를 더 이상 쓰지 않는다고 알리는 동작입니다.
+  - 쓰기/읽기는 페이지 단위, 지우기는 블록 단위입니다. 공간 회수(GC)는 유효 페이지를 옮긴 뒤 블록을 지우므로 추가 물리 I/O를 발생시킵니다.
+  - 논리 쓰기 수와 물리 쓰기 수를 비교하면 쓰기 증폭을 볼 수 있습니다. 시간은 마이크로초이며 운영체제의 실제 측정 시간이 아닙니다.
+""")

@@ -1,4 +1,43 @@
-# Homeworks
+# OSTEP 숙제 한국어 버전
+
+한국인을 위한 한국어 버전입니다.
+
+Python 숙제 도구 26개의 출력과 옵션 설명을 한글로 바꾸고, 값의 의미와 중요하게 볼 점을 각주로 추가했습니다. 계산 로직과 기존 실행 옵션은 유지했습니다.
+
+## 리눅스에서 바로 실행
+
+Ubuntu/Debian에서 Git과 Python 3이 없다면 먼저 설치하세요.
+
+```sh
+sudo apt update
+sudo apt install -y git python3
+```
+
+```sh
+git clone https://github.com/graybeeer/ostep-kr.git
+cd ostep-kr
+
+# 문제와 정답·각주 보기
+./run-ko.sh cpu-sched/scheduler.py -l 5,3,1 -p RR -q 2 -c
+
+# 옵션의 한글 설명 보기
+./run-ko.sh cpu-sched/scheduler.py -h
+```
+
+`-c`를 빼면 정답을 숨긴 문제를 볼 수 있습니다. Python 패키지를 추가로 설치할 필요는 없습니다. 실행 스크립트는 숙제 폴더로 이동하므로 예제 입력 파일도 바로 사용할 수 있습니다.
+
+```sh
+./run-ko.sh file-ffs/ffs.py -f in.example1 -T -M -c
+./run-ko.sh threads-locks/x86.py -p test-and-set.s -a bx=2 -M mutex,count -i 3 -c
+```
+
+**[한글 사용 안내 및 장별 실행 예제](README.ko.md)** — Windows 실행 방법, 해설 예시, 번역 범위와 검증 방법을 확인할 수 있습니다.
+
+원본: [remzi-arpacidusseau/ostep-homework](https://github.com/remzi-arpacidusseau/ostep-homework/). 원본 저자와 Git 이력을 유지한 학습용 한국어 버전입니다. C 실습 코드와 GUI 내부 문구는 원문으로 남아 있습니다.
+
+---
+
+# Original Homeworks
 
 Each chapter has some questions at the end; we call these "homeworks", because you should do the "work" at your "home". Make sense? It's one of the innovations of this book.
 

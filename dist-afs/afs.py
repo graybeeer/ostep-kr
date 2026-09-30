@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import random
@@ -37,7 +38,7 @@ def isset(num, index):
 # useful instead of assert
 def zassert(cond, str):
     if cond == False:
-        print('ABORT::', str)
+        print('중단::', str)
         exit(1)
 
 #
@@ -87,14 +88,14 @@ class server:
         self.getcnt, self.putcnt = 0, 0
 
     def stats(self):
-        print('Server   -- Gets:%d Puts:%d' % (self.getcnt, self.putcnt))
+        print('서버     -- 가져오기:%d 저장:%d' % (self.getcnt, self.putcnt))
 
     def filestats(self, printcontents):
         for fname in self.contents:
             if printcontents:
-                print('file:%s contains:%d' % (fname, self.contents[fname]))
+                print('파일:%s 내용:%d' % (fname, self.contents[fname]))
             else:
-                print('file:%s contains:?' % fname)
+                print('파일:%s 내용:?' % fname)
             
 
     def setclients(self, clients):
@@ -107,27 +108,27 @@ class server:
             self.cache[c.getname()] = []
 
     def get(self, client, fname):
-        zassert(fname in self.contents, 'server:get() -- file:%s not found on server' % fname)
+        zassert(fname in self.contents, '서버 가져오기 -- 파일:%s이(가) 서버에 없습니다' % fname)
         self.getcnt += 1
         if self.solve and isset(self.detail, 0):
-            print('getfile:%s c:%s [%d]' % (fname, client, self.contents[fname]))
+            print('파일 가져오기:%s 클라이언트:%s [%d]' % (fname, client, self.contents[fname]))
         if fname not in self.cache[client]:
             self.cache[client].append(fname)
             # dprint('  -> List for client %s' % client, ' is ', self.cache[client])
         return self.contents[fname]
 
     def put(self, client, fname, value):
-        zassert(fname in self.contents, 'server:put() -- file:%s not found on server' % fname)
+        zassert(fname in self.contents, '서버 저장 -- 파일:%s이(가) 서버에 없습니다' % fname)
         self.putcnt += 1
         self.contents[fname] = value
         if self.solve and isset(self.detail, 0):
-            print('putfile:%s c:%s [%s]' % (fname, client, self.contents[fname]))
+            print('파일 저장:%s 클라이언트:%s [%s]' % (fname, client, self.contents[fname]))
         # scan others for callback
         for c in self.clients:
             cname = c.getname()
             if fname in self.cache[cname] and cname != client:
                 if self.solve and isset(self.detail, 1):
-                    print('callback: c:%s file:%s' % (cname, fname))
+                    print('콜백: 클라이언트:%s 파일:%s' % (cname, fname))
                 c.invalidate(fname)
                 # XXX - this is not right ...
                 # self.cache[cname].remove(fname)
@@ -148,7 +149,7 @@ class filedesc:
 
     def alloc(self, fname, sfd=-1):
         if sfd != -1:
-            zassert(self.fd[sfd] == '', 'filedesc:alloc() -- fd:%d already in use, cannot allocate' % sfd)
+            zassert(self.fd[sfd] == '', '파일 디스크립터 할당 -- fd:%d은(는) 이미 사용 중입니다' % sfd)
             self.fd[sfd] = fname
             return sfd
         else:
@@ -159,13 +160,13 @@ class filedesc:
             return -1
 
     def lookup(self, sfd):
-        zassert(i >= 0 and i < self.max, 'filedesc:lookup() -- file descriptor out of valid range (%d not between 0 and %d)' % (sfd, self.max))
-        zassert(self.fd[sfd] != '',      'filedesc:lookup() -- fd:%d not in use, cannot lookup' % sfd)
+        zassert(i >= 0 and i < self.max, '파일 디스크립터 조회 -- 유효 범위 초과 (%d은(는) 0~%d 범위가 아님)' % (sfd, self.max))
+        zassert(self.fd[sfd] != '',      '파일 디스크립터 조회 -- fd:%d은(는) 사용 중이 아니어서 조회할 수 없습니다' % sfd)
         return self.fd[sfd]
 
     def free(self, i):
-        zassert(i >= 0 and i < self.max, 'filedesc:free() -- file descriptor out of valid range (%d not between 0 and %d)' % (sfd, self.max))
-        zassert(self.fd[sfd] != '',      'filedesc:free() -- fd:%d not in use, cannot free' % sfd)
+        zassert(i >= 0 and i < self.max, '파일 디스크립터 해제 -- 유효 범위 초과 (%d은(는) 0~%d 범위가 아님)' % (sfd, self.max))
+        zassert(self.fd[sfd] != '',      '파일 디스크립터 해제 -- fd:%d은(는) 사용 중이 아니어서 해제할 수 없습니다' % sfd)
         self.fd[i] = ''
 
 #
@@ -198,7 +199,7 @@ class cache:
         self.invalidcnt = 0
 
     def stats(self):
-        print('   Cache -- Hits:%d Misses:%d Invalidates:%d' % (self.hitcnt, self.misscnt, self.invalidcnt))
+        print('   캐시 -- 적중:%d 실패:%d 무효화:%d' % (self.hitcnt, self.misscnt, self.invalidcnt))
 
     def put(self, fname, data, dirty, refcnt):
         self.cache[fname] = dict(data=data, dirty=dirty, refcnt=refcnt, valid=True)
@@ -208,7 +209,7 @@ class cache:
 
     def invalidate(self, fname):
         dospace(self.num)
-        print('invalidate file:%s' % fname, 'cache:', self.cache)
+        print('파일 무효화:%s' % fname, '캐시:', self.cache)
         # zassert(fname in self.cache, 'cache:invalidate() -- cannot invalidate file not in cache (%s)' % fname)
         if fname not in self.cache:
             return
@@ -218,13 +219,13 @@ class cache:
         if self.solve and isset(self.detail, 1):
             dospace(self.num)
             if isset(self.detail,3):
-                print('%2s invalidate %s' % (self.name, fname))
+                print('%2s 무효화 %s' % (self.name, fname))
             else:
-                print('invalidate %s' % (fname))
+                print('무효화 %s' % (fname))
             self.printstate(self.num)
 
     def checkvalid(self, fname):
-        zassert(fname in self.cache, 'cache:checkvalid() -- cannot checkvalid on file not in cache (%s)' % fname)
+        zassert(fname in self.cache, '캐시 유효성 검사 -- 캐시에 없는 파일은 검사할 수 없습니다 (%s)' % fname)
         if self.cache[fname]['valid'] == False and self.cache[fname]['refcnt'] == 0:
             del self.cache[fname]
 
@@ -309,7 +310,7 @@ def op2name(op):
     elif op == MICRO_CLOSE:
         return 'MICRO_CLOSE'
     else:
-        abort('error: bad op -> ' + op)
+        abort('오류: 잘못된 동작 -> ' + op)
 
 #
 # Client class
@@ -350,7 +351,7 @@ class client:
                 fname = pickrand(self.files.getfiles())
                 r = random.random()
                 fd = self.fd.alloc(fname)
-                zassert(fd >= 0, 'client:init() -- ran out of file descriptors, sorry!')
+                zassert(fd >= 0, '클라이언트 초기화 -- 파일 디스크립터가 부족합니다!')
                 if r < self.bias[0]:
                     # FILE_READ
                     self.acts.append((MICRO_OPEN,  fname, fd))
@@ -368,25 +369,25 @@ class client:
             for a in self.actions.split(':'):
                 act = a[0]
                 if act == 'o':
-                    zassert(len(a) == 3, 'client:init() -- malformed open action (%s) should be oa1 or something like that' % a)
+                    zassert(len(a) == 3, '클라이언트 초기화 -- 잘못된 열기 동작 (%s), oa1과 같은 형식을 사용하세요' % a)
                     fname, fd = a[1], int(a[2])
                     self.fd.alloc(fname, fd)
                     assert(fd >= 0)
                     self.acts.append((MICRO_OPEN,  fname, fd))
                 elif act == 'r':
-                    zassert(len(a) == 2, 'client:init() -- malformed read action (%s) should be r1 or something like that' % a)
+                    zassert(len(a) == 2, '클라이언트 초기화 -- 잘못된 읽기 동작 (%s), r1과 같은 형식을 사용하세요' % a)
                     fd = int(a[1])
                     self.acts.append((MICRO_READ,  fd))
                 elif act == 'w':
-                    zassert(len(a) == 2, 'client:init() -- malformed write action (%s) should be w1 or something like that' % a)
+                    zassert(len(a) == 2, '클라이언트 초기화 -- 잘못된 쓰기 동작 (%s), w1과 같은 형식을 사용하세요' % a)
                     fd = int(a[1])
                     self.acts.append((MICRO_WRITE, fd))
                 elif act == 'c':
-                    zassert(len(a) == 2, 'client:init() -- malformed close action (%s) should be c1 or something like that' % a)
+                    zassert(len(a) == 2, '클라이언트 초기화 -- 잘못된 닫기 동작 (%s), c1과 같은 형식을 사용하세요' % a)
                     fd = int(a[1])
                     self.acts.append((MICRO_CLOSE, fd))
                 else:
-                    print('Unrecognized command: %s (from %s)' % (act, a))
+                    print('알 수 없는 명령: %s (입력 %s)' % (act, a))
                     exit(1)
         print(self.acts)
         return
@@ -395,7 +396,7 @@ class client:
         return self.name
 
     def stats(self):
-        print('%s       -- Reads:%d Writes:%d' % (self.name, self.readcnt, self.writecnt))
+        print('%s       -- 읽기:%d 쓰기:%d' % (self.name, self.readcnt, self.writecnt))
         self.cache.stats()
             
     def getfile(self, fname):
@@ -495,26 +496,26 @@ class client:
 # main program
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed',      default=0,      help='the random seed',           action='store', type='int', dest='seed')
-parser.add_option('-C', '--clients',   default=2,      help='number of clients',         action='store', type='int', dest='numclients')
-parser.add_option('-n', '--numsteps',  default=2,      help='ops each client will do',   action='store', type='int', dest='numsteps')
-parser.add_option('-f', '--numfiles',  default=1,      help='number of files in server', action='store', type='int', dest='numfiles')
-parser.add_option('-r', '--readratio', default=0.5,    help='ratio of reads/writes',     action='store', type='float', dest='readratio')
-parser.add_option('-A', '--actions',   default='',     help='client actions exactly specified, e.g., oa1:r1:c1,oa1:w1:c1 specifies two clients; each opens the file a, client 0 reads it whereas client 1 writes it, and then each closes it', action='store', type='string', dest='actions')
-parser.add_option('-S', '--schedule',  default='',     help='exact schedule to run; 01 alternates round robin between clients 0 and 1. Left unspecified leads to random scheduling', action='store', type='string', dest='schedule')
-parser.add_option('-p', '--printstats', default=False, help='print extra stats',      action='store_true', dest='printstats')
-parser.add_option('-c', '--compute',    default=False, help='compute answers for me', action='store_true', dest='solve')
-parser.add_option('-d', '--detail',     default=0,     help='detail level when giving answers (1:server actions,2:invalidations,4:client cache,8:extra labels); OR together for multiple', action='store', type='int', dest='detail')
+parser.add_option('-s', '--seed',      default=0,      help='난수 시드 (같은 값으로 같은 문제 재현)',           action='store', type='int', dest='seed')
+parser.add_option('-C', '--clients',   default=2,      help='클라이언트 수',         action='store', type='int', dest='numclients')
+parser.add_option('-n', '--numsteps',  default=2,      help='클라이언트별 동작 수',   action='store', type='int', dest='numsteps')
+parser.add_option('-f', '--numfiles',  default=1,      help='서버의 파일 수', action='store', type='int', dest='numfiles')
+parser.add_option('-r', '--readratio', default=0.5,    help='읽기 비율 (나머지는 쓰기)',     action='store', type='float', dest='readratio')
+parser.add_option('-A', '--actions',   default='',     help='클라이언트 동작 직접 지정 (oa1:r1:c1,oa1:w1:c1: 두 클라이언트가 파일 a를 열고, 각각 읽기/쓰기를 한 뒤 닫음)', action='store', type='string', dest='actions')
+parser.add_option('-S', '--schedule',  default='',     help='실행 순서 지정 (01: 클라이언트 0과 1을 번갈아 실행, 생략하면 무작위)', action='store', type='string', dest='schedule')
+parser.add_option('-p', '--printstats', default=False, help='추가 통계 표시',      action='store_true', dest='printstats')
+parser.add_option('-c', '--compute',    default=False, help='정답과 계산 결과 표시', action='store_true', dest='solve')
+parser.add_option('-d', '--detail',     default=0,     help='정답 상세 수준 (1: 서버 동작, 2: 무효화, 4: 클라이언트 캐시, 8: 추가 이름표; 비트 OR로 조합)', action='store', type='int', dest='detail')
 (options, args) = parser.parse_args()
 
-print('ARG seed',       options.seed)
-print('ARG numclients', options.numclients)
-print('ARG numsteps',   options.numsteps)
-print('ARG numfiles',   options.numfiles)
-print('ARG readratio',  options.readratio)
-print('ARG actions',    options.actions)
-print('ARG schedule',   options.schedule)
-print('ARG detail',     options.detail)
+print('설정 난수 시드 (seed)',       options.seed)
+print('설정 클라이언트 수 (numclients)', options.numclients)
+print('설정 클라이언트별 동작 수 (numsteps)',   options.numsteps)
+print('설정 파일 수 (numfiles)',   options.numfiles)
+print('설정 읽기 비율 (readratio)',  options.readratio)
+print('설정 동작 (actions)',    options.actions)
+print('설정 실행 순서 (schedule)',   options.schedule)
+print('설정 상세 수준 (detail)',     options.detail)
 print('')
 
 seed       = int(options.seed)
@@ -531,8 +532,8 @@ detail     = options.detail
 # with specific schedule, files are all specified by a single letter in specific actions list
 # but we ignore this for now...
 
-zassert(numfiles > 0 and numfiles <= 26, 'main: can only simulate 26 or fewer files, sorry')
-zassert(readratio >= 0.0 and readratio <= 1.0, 'main: read ratio must be between 0 and 1 inclusive')
+zassert(numfiles > 0 and numfiles <= 26, '파일은 26개까지만 시뮬레이션할 수 있습니다')
+zassert(readratio >= 0.0 and readratio <= 1.0, '읽기 비율은 0 이상 1 이하여야 합니다')
 
 # start it
 random_seed(seed)
@@ -564,7 +565,7 @@ else:
 s.setclients(clients)
 
 # init print out for clients
-print('%12s' % 'Server', '%12s' % ' ', end=' ')
+print('%12s' % '서버', '%12s' % ' ', end=' ')
 for c in clients:
     print('%13s' % c.getname(), '%13s' % ' ', end=' ')
 print('')
@@ -588,7 +589,7 @@ if schedule != '':
             curr = schedule[j]
             if int(curr) == i:
                 cnt += 1
-        zassert(cnt != 0, 'main: client %d not in schedule:%s, which would never terminate' % (i, schedule))
+        zassert(cnt != 0, '클라이언트 %d이(가) 실행 순서:%s에 없어 종료할 수 없습니다' % (i, schedule))
             
 # RUN the schedule (either random or specified by user)
 numrunning = len(clients)
@@ -614,3 +615,11 @@ if printstats:
     for c in clients:
         c.stats()
 
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 서버 가져오기(Get)/저장(Put)은 서버와의 파일 전송 횟수, 캐시 적중/실패는 로컬 복사본 사용 가능 여부입니다.
+  - open/read/write/close는 열기/읽기/쓰기/닫기입니다. 클라이언트의 변경이 서버에 언제 전달되고 다른 클라이언트의 캐시가 언제 무효화되는지 보세요.
+  - 캐시의 v는 유효 여부, d는 수정 여부(dirty), r은 열고 있는 참조 수입니다. 콜백은 서버가 캐시 무효화를 알리는 동작입니다.
+""")

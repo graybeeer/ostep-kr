@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import random
@@ -213,8 +214,8 @@ class fs:
         self.nameToInum = {'/':self.ROOT}
 
     def dump(self):
-        print('inode bitmap ', self.ibitmap.dump())
-        print('inodes       ', end='')
+        print('아이노드 비트맵 ', self.ibitmap.dump())
+        print('아이노드        ', end='')
         for i in range(0,self.numInodes):
             ftype = self.inodes[i].getType()
             if ftype == 'free':
@@ -222,8 +223,8 @@ class fs:
             else:
                 print('[%s a:%s r:%d]' % (ftype, self.inodes[i].getAddr(), self.inodes[i].getRefCnt()), end='')
         print('')
-        print('data bitmap  ', self.dbitmap.dump())
-        print('data         ', end='')
+        print('데이터 비트맵   ', self.dbitmap.dump())
+        print('데이터          ', end='')
         for i in range(self.numData):
             print(self.data[i].dump(), end='')
         print('')
@@ -473,14 +474,14 @@ class fs:
         self.percentDelete = 0.20
         self.numRequests   = 20
 
-        print('Initial state')
+        print('초기 상태')
         print('')
         self.dump()
         print('')
         
         for i in range(numRequests):
             if printOps == False:
-                print('Which operation took place?')
+                print('어떤 동작이 수행되었나요?')
             rc = -1
             while rc == -1:
                 r = random.random()
@@ -501,10 +502,10 @@ class fs:
                         rc = self.doCreate('d')
                         dprint('doCreate(d) rc:%d' % rc)
                 if self.ibitmap.numFree() == 0:
-                    print('File system out of inodes; rerun with more via command-line flag?')
+                    print('아이노드가 부족합니다. 실행 옵션으로 아이노드 수를 늘려 보세요.')
                     exit(1)
                 if self.dbitmap.numFree() == 0:
-                    print('File system out of data blocks; rerun with more via command-line flag?')
+                    print('데이터 블록이 부족합니다. 실행 옵션으로 블록 수를 늘려 보세요.')
                     exit(1)
             if printState == True:
                 print('')
@@ -512,15 +513,15 @@ class fs:
                 print('')
             else:
                 print('')
-                print('  State of file system (inode bitmap, inodes, data bitmap, data)?')
+                print('  파일 시스템 상태(아이노드 비트맵, 아이노드, 데이터 비트맵, 데이터)는?')
                 print('')
 
         if printFinal:
             print('')
-            print('Summary of files, directories::')
+            print('파일 및 디렉터리 요약::')
             print('')
-            print('  Files:      ', self.files)
-            print('  Directories:', self.dirs)
+            print('  파일:       ', self.files)
+            print('  디렉터리:', self.dirs)
             print('')
 
 #
@@ -528,22 +529,22 @@ class fs:
 #
 parser = OptionParser()
 
-parser.add_option('-s', '--seed',        default=0,     help='the random seed',                      action='store', type='int', dest='seed')
-parser.add_option('-i', '--numInodes',   default=8,     help='number of inodes in file system',      action='store', type='int', dest='numInodes') 
-parser.add_option('-d', '--numData',     default=8,     help='number of data blocks in file system', action='store', type='int', dest='numData') 
-parser.add_option('-n', '--numRequests', default=10,    help='number of requests to simulate',       action='store', type='int', dest='numRequests')
-parser.add_option('-r', '--reverse',     default=False, help='instead of printing state, print ops', action='store_true',        dest='reverse')
-parser.add_option('-p', '--printFinal',  default=False, help='print the final set of files/dirs',    action='store_true',        dest='printFinal')
-parser.add_option('-c', '--compute',     default=False, help='compute answers for me',               action='store_true',        dest='solve')
+parser.add_option('-s', '--seed',        default=0,     help='난수 시드 (같은 값으로 같은 문제 재현)',                      action='store', type='int', dest='seed')
+parser.add_option('-i', '--numInodes',   default=8,     help='파일 시스템의 아이노드 수',      action='store', type='int', dest='numInodes')
+parser.add_option('-d', '--numData',     default=8,     help='파일 시스템의 데이터 블록 수', action='store', type='int', dest='numData')
+parser.add_option('-n', '--numRequests', default=10,    help='시뮬레이션할 요청 수',       action='store', type='int', dest='numRequests')
+parser.add_option('-r', '--reverse',     default=False, help='상태 대신 동작을 보여 주고 상태를 문제로 제시', action='store_true',        dest='reverse')
+parser.add_option('-p', '--printFinal',  default=False, help='최종 파일/디렉터리 목록 표시',    action='store_true',        dest='printFinal')
+parser.add_option('-c', '--compute',     default=False, help='정답과 계산 결과 표시',               action='store_true',        dest='solve')
 
 (options, args) = parser.parse_args()
 
-print('ARG seed',        options.seed)
-print('ARG numInodes',   options.numInodes)
-print('ARG numData',     options.numData)
-print('ARG numRequests', options.numRequests)
-print('ARG reverse',     options.reverse)
-print('ARG printFinal',  options.printFinal)
+print('설정 난수 시드 (seed)',        options.seed)
+print('설정 아이노드 수 (numInodes)',   options.numInodes)
+print('설정 데이터 블록 수 (numData)',     options.numData)
+print('설정 요청 수 (numRequests)', options.numRequests)
+print('설정 문제와 정답의 표시 방향 반전 (reverse)',     options.reverse)
+print('설정 최종 목록 표시 (printFinal)',  options.printFinal)
 print('')
 
 random_seed(options.seed)
@@ -575,3 +576,11 @@ f = fs(options.numInodes, options.numData)
 f.run(options.numRequests)
 
 
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 비트맵은 1이면 사용 중, 0이면 빈 항목입니다. 아이노드의 f는 파일, d는 디렉터리, a는 데이터 블록 주소, r은 참조 수입니다.
+  - creat는 파일 생성, mkdir은 디렉터리 생성, link는 하드 링크 추가, unlink는 이름 제거, write는 데이터 쓰기입니다.
+  - 동작 전후의 비트맵·아이노드·디렉터리 항목을 함께 보세요. 이름 하나를 지워도 참조가 남아 있으면 파일 데이터는 해제되지 않습니다.
+""")

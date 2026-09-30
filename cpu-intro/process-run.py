@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import sys
@@ -74,7 +75,7 @@ class scheduler:
                 # add one compute to HANDLE the I/O completion
                 self.proc_info[proc_id][PROC_CODE].append(DO_IO_DONE)
             else:
-                print('bad opcode %s (should be c or i)' % opcode)
+                print('잘못된 명령 %s (c 또는 i여야 함)' % opcode)
                 exit(1)
         return
 
@@ -82,9 +83,9 @@ class scheduler:
         proc_id = self.new_process()
         tmp = program_description.split(':')
         if len(tmp) != 2:
-            print('Bad description (%s): Must be number <x:y>' % program_description)
-            print('  where X is the number of instructions')
-            print('  and Y is the percent change that an instruction is CPU not IO')
+            print('잘못된 설정 (%s): 숫자 <x:y> 형식이어야 합니다' % program_description)
+            print('  X는 명령어 수입니다')
+            print('  Y는 명령어가 I/O 대신 CPU를 사용하는 확률(백분율)입니다')
             exit(1)
 
         num_instructions, chance_cpu = int(tmp[0]), float(tmp[1])/100.0
@@ -198,11 +199,11 @@ class scheduler:
         self.move_to_running(STATE_READY)
 
         # OUTPUT: headers for each column
-        print('%s' % 'Time', end='') 
+        print('%s' % '시각', end='')
         for pid in range(len(self.proc_info)):
             print('%14s' % ('PID:%2d' % (pid)), end='')
         print('%14s' % 'CPU', end='')
-        print('%14s' % 'IOs', end='')
+        print('%14s' % 'I/O', end='')
         print('')
 
         # init statistics
@@ -284,15 +285,22 @@ class scheduler:
 #
 
 parser = OptionParser()
-parser.add_option('-s', '--seed', default=0, help='the random seed', action='store', type='int', dest='seed')
-parser.add_option('-P', '--program', default='', help='more specific controls over programs', action='store', type='string', dest='program')
-parser.add_option('-l', '--processlist', default='', help='a comma-separated list of processes to run, in the form X1:Y1,X2:Y2,... where X is the number of instructions that process should run, and Y the chances (from 0 to 100) that an instruction will use the CPU or issue an IO (i.e., if Y is 100, a process will ONLY use the CPU and issue no I/Os; if Y is 0, a process will only issue I/Os)', action='store', type='string', dest='process_list')
-parser.add_option('-L', '--iolength', default=5, help='how long an IO takes', action='store', type='int', dest='io_length')
-parser.add_option('-S', '--switch', default='SWITCH_ON_IO', help='when to switch between processes: SWITCH_ON_IO, SWITCH_ON_END', action='store', type='string', dest='process_switch_behavior')
-parser.add_option('-I', '--iodone', default='IO_RUN_LATER', help='type of behavior when IO ends: IO_RUN_LATER, IO_RUN_IMMEDIATE', action='store', type='string', dest='io_done_behavior')
-parser.add_option('-c', help='compute answers for me', action='store_true', default=False, dest='solve')
-parser.add_option('-p', '--printstats', help='print statistics at end; only useful with -c flag (otherwise stats are not printed)', action='store_true', default=False, dest='print_stats')
+parser.add_option('-s', '--seed', default=0, help='난수 시드 (같은 값으로 같은 문제 재현)', action='store', type='int', dest='seed')
+parser.add_option('-P', '--program', default='', help='프로그램 명령을 직접 지정 (예: c5,i)', action='store', type='string', dest='program')
+parser.add_option('-l', '--processlist', default='', help='프로세스 목록 X1:Y1,X2:Y2,... (X: 명령어 수, Y: CPU 명령 확률 0~100. 100이면 CPU만, 0이면 I/O만 사용)', action='store', type='string', dest='process_list')
+parser.add_option('-L', '--iolength', default=5, help='I/O 완료에 걸리는 시간', action='store', type='int', dest='io_length')
+parser.add_option('-S', '--switch', default='SWITCH_ON_IO', help='프로세스 전환 시점: SWITCH_ON_IO (I/O 시작 시), SWITCH_ON_END (종료 시)', action='store', type='string', dest='process_switch_behavior')
+parser.add_option('-I', '--iodone', default='IO_RUN_LATER', help='I/O 완료 후 실행: IO_RUN_LATER (차례를 기다림), IO_RUN_IMMEDIATE (즉시 실행)', action='store', type='string', dest='io_done_behavior')
+parser.add_option('-c', help='정답과 계산 결과 표시', action='store_true', default=False, dest='solve')
+parser.add_option('-p', '--printstats', help='끝에 통계 표시 (-c와 함께 사용해야 표시됨)', action='store_true', default=False, dest='print_stats')
 (options, args) = parser.parse_args()
+
+print("""
+[각주: 출력 읽는 법]
+  - PID는 프로세스 번호입니다. RUN은 실행, READY는 실행 대기, BLOCKED은 I/O 대기, DONE은 종료 상태입니다.
+  - 시각 옆 *는 I/O 완료 시점입니다. CPU 열과 I/O 열은 해당 시각의 사용 여부/진행 중인 I/O 수를 보여 줍니다.
+  - CPU 사용률 = CPU 사용 시간 / 전체 경과 시간 × 100입니다. 한 프로세스가 I/O를 기다리는 동안 다른 프로세스가 CPU를 쓰는지 보세요.
+""")
 
 random_seed(options.seed)
 
@@ -312,23 +320,23 @@ else:
 assert(options.io_length >= 0)
 
 if options.solve == False:
-    print('Produce a trace of what would happen when you run these processes:')
+    print('다음 프로세스를 실행할 때의 실행 흐름을 작성하세요:')
     for pid in range(s.get_num_processes()):
-        print('Process %d' % pid)
+        print('프로세스 %d' % pid)
         for inst in range(s.get_num_instructions(pid)):
             print('  %s' % s.get_instruction(pid, inst))
         print('')
-    print('Important behaviors:')
-    print('  System will switch when ', end='')
+    print('확인할 동작:')
+    print('  프로세스 전환 조건: ', end='')
     if options.process_switch_behavior == SCHED_SWITCH_ON_IO:
-        print('the current process is FINISHED or ISSUES AN IO')
+        print('현재 프로세스가 종료되거나 I/O를 요청할 때')
     else:
-        print('the current process is FINISHED')
-    print('  After IOs, the process issuing the IO will ', end='')
+        print('현재 프로세스가 종료될 때')
+    print('  I/O 완료 후 요청한 프로세스는 ', end='')
     if options.io_done_behavior == IO_RUN_IMMEDIATE:
-        print('run IMMEDIATELY')
+        print('즉시 실행됩니다')
     else:
-        print('run LATER (when it is its turn)')
+        print('자신의 차례가 오면 실행됩니다')
     print('')
     exit(0)
 
@@ -336,7 +344,7 @@ if options.solve == False:
 
 if options.print_stats:
     print('')
-    print('Stats: Total Time %d' % clock_tick)
-    print('Stats: CPU Busy %d (%.2f%%)' % (cpu_busy, 100.0 * float(cpu_busy)/clock_tick))
-    print('Stats: IO Busy  %d (%.2f%%)' % (io_busy, 100.0 * float(io_busy)/clock_tick))
+    print('통계: 전체 경과 시간 %d' % clock_tick)
+    print('통계: CPU 사용 시간 %d (%.2f%%)' % (cpu_busy, 100.0 * float(cpu_busy)/clock_tick))
+    print('통계: I/O 처리 중인 시간 %d (%.2f%%)' % (io_busy, 100.0 * float(io_busy)/clock_tick))
     print('')

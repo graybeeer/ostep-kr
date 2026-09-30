@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import sys
@@ -14,27 +15,27 @@ def random_seed(seed):
     return
 
 parser = OptionParser()
-parser.add_option('-s', '--seed', default=0, help='the random seed',              action='store', type='int', dest='seed')
-parser.add_option('-j', '--jobs', default=3, help='number of jobs in the system', action='store', type='int', dest='jobs')
-parser.add_option('-l', '--jlist', default='', help='instead of random jobs, provide a comma-separated list of run times and ticket values (e.g., 10:100,20:100 would have two jobs with run-times of 10 and 20, each with 100 tickets)',  action='store', type='string', dest='jlist')
-parser.add_option('-m', '--maxlen',  default=10,  help='max length of job',         action='store', type='int', dest='maxlen')
-parser.add_option('-T', '--maxticket', default=100, help='maximum ticket value, if randomly assigned',          action='store', type='int', dest='maxticket')
-parser.add_option('-q', '--quantum', default=1,   help='length of time slice', action='store', type='int', dest='quantum')
-parser.add_option('-c', '--compute', help='compute answers for me', action='store_true', default=False, dest='solve')
+parser.add_option('-s', '--seed', default=0, help='난수 시드 (같은 값으로 같은 문제 재현)',              action='store', type='int', dest='seed')
+parser.add_option('-j', '--jobs', default=3, help='시스템의 작업 수', action='store', type='int', dest='jobs')
+parser.add_option('-l', '--jlist', default='', help='실행시간:추첨권수 목록 지정 (예: 10:100,20:100은 실행 시간 10과 20, 추첨권 각 100장인 두 작업)',  action='store', type='string', dest='jlist')
+parser.add_option('-m', '--maxlen',  default=10,  help='작업의 최대 실행 시간',         action='store', type='int', dest='maxlen')
+parser.add_option('-T', '--maxticket', default=100, help='임의 생성 시 작업당 최대 추첨권 수',          action='store', type='int', dest='maxticket')
+parser.add_option('-q', '--quantum', default=1,   help='타임 슬라이스 길이', action='store', type='int', dest='quantum')
+parser.add_option('-c', '--compute', help='정답과 계산 결과 표시', action='store_true', default=False, dest='solve')
 
 (options, args) = parser.parse_args()
 
 random_seed(options.seed)
 
-print('ARG jlist', options.jlist)
-print('ARG jobs', options.jobs)
-print('ARG maxlen', options.maxlen)
-print('ARG maxticket', options.maxticket)
-print('ARG quantum', options.quantum)
-print('ARG seed', options.seed)
+print('설정 작업 목록 (jlist)', options.jlist)
+print('설정 작업 수 (jobs)', options.jobs)
+print('설정 최대 실행 시간 (maxlen)', options.maxlen)
+print('설정 최대 추첨권 수 (maxticket)', options.maxticket)
+print('설정 타임 슬라이스 길이 (quantum)', options.quantum)
+print('설정 난수 시드 (seed)', options.seed)
 print('')
 
-print('Here is the job list, with the run time of each job: ')
+print('각 작업과 필요한 실행 시간: ')
 
 import operator
 
@@ -53,7 +54,7 @@ if options.jlist == '':
         runTotal += runtime
         tickTotal += tickets
         joblist.append([jobnum, runtime, tickets])
-        print('  Job %d ( length = %d, tickets = %d )' % (jobnum, runtime, tickets))
+        print('  작업 %d ( 실행 시간 = %d, 추첨권 수 = %d )' % (jobnum, runtime, tickets))
 else:
     jobnum = 0
     for entry in options.jlist.split(','):
@@ -63,17 +64,17 @@ else:
         tickTotal += int(tickets)
         jobnum += 1
     for job in joblist:
-        print('  Job %d ( length = %d, tickets = %d )' % (job[0], job[1], job[2]))
+        print('  작업 %d ( 실행 시간 = %d, 추첨권 수 = %d )' % (job[0], job[1], job[2]))
 print('\n')
 
 if options.solve == False:
-    print('Here is the set of random numbers you will need (at most):')
+    print('추첨 계산에 사용할 난수 목록 (필요한 만큼 사용):')
     for i in range(runTotal):
         r = int(random.random() * 1000001)
-        print('Random', r)
+        print('난수', r)
 
 if options.solve == True:
-    print('** Solutions **\n')
+    print('** 정답 **\n')
 
     jobs  = len(joblist)
     clock = 0
@@ -88,10 +89,10 @@ if options.solve == True:
                 (wjob, wrun, wtix) = (job, runtime, tickets)
                 break
 
-        print('Random', r, '-> Winning ticket %d (of %d) -> Run %d' % (winner, tickTotal, wjob))
+        print('난수', r, '-> 당첨 추첨권 %d (전체 %d장) -> 작업 %d 실행' % (winner, tickTotal, wjob))
         # print('Winning ticket %d (of %d) -> Run %d' % (winner, tickTotal, wjob))
 
-        print('  Jobs:',)
+        print('  작업 목록:',)
         for (job, runtime, tickets) in joblist:
             if wjob == job:
                 wstr = '*'
@@ -102,7 +103,7 @@ if options.solve == True:
                 tstr = tickets
             else:
                 tstr = '---'
-            print(' (%s job:%d timeleft:%d tix:%s ) ' % (wstr, job, runtime, tstr), end='')
+            print(' (%s 작업:%d 남은 시간:%d 추첨권:%s ) ' % (wstr, job, runtime, tstr), end='')
         print('')
 
         # now do the accounting
@@ -115,7 +116,7 @@ if options.solve == True:
 
         # job completed!
         if wrun == 0:
-            print('--> JOB %d DONE at time %d' % (wjob, clock))
+            print('--> 작업 %d 완료, 완료 시각 %d' % (wjob, clock))
             tickTotal -= wtix
             wtix = 0
             jobs -= 1
@@ -130,3 +131,11 @@ if options.solve == True:
 
 
 
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 추첨권(tickets)이 많을수록 CPU를 배정받을 확률이 높습니다. 당첨 번호는 난수를 현재 전체 추첨권 수로 나눈 나머지입니다.
+  - timeleft는 남은 CPU 실행 시간입니다. 완료된 작업의 추첨권은 다음 추첨에서 제외됩니다.
+  - 추첨권 비율은 장기적인 배분 비율입니다. 짧은 실행에서는 무작위 변동으로 비율이 정확히 맞지 않을 수 있습니다.
+""")

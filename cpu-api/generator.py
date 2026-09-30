@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import random
@@ -223,7 +224,7 @@ class CodeGeneratorReadable:
                 assert(len(tmp) == 1)
                 self.add_wait()
             else:
-                print('bad command')
+                print('잘못된 명령')
                 exit(1)
                 return
         self.boiler.fini()
@@ -280,8 +281,8 @@ class CodeGeneratorRunnable:
     def add_exit(self):
         # MUST HAVE DONE ALL WAITS(!)
         if len(self.waiting_for[self.curr_thread]) > 0:
-            print('error: thread cannot exit without performing all needed waits')
-            print('  thread %s has outstanding children:' % self.curr_thread, self.waiting_for[self.curr_thread])
+            print('오류: 필요한 wait를 모두 수행하기 전에는 종료할 수 없습니다')
+            print('  실행 흐름 %s에 아직 기다려야 할 자식이 있습니다:' % self.curr_thread, self.waiting_for[self.curr_thread])
             exit(1)
         self.tab()
         self.fd.write('End(\"%s\");\n' % self.curr_thread)
@@ -320,7 +321,7 @@ class CodeGeneratorRunnable:
                 assert(len(tmp) == 1)
                 self.add_wait()
             else:
-                print('bad command')
+                print('잘못된 명령')
                 exit(1)
                 return
         self.boiler.fini()
@@ -345,7 +346,7 @@ class ProgramGenerator:
 
     def get_next_name(self):
         if self.name_index == len(self.names):
-            print('program generator: out of names (too many processes)')
+            print('프로그램 생성기: 사용 가능한 이름이 없습니다 (프로세스가 너무 많음)')
             exit(1)
         n = self.names[self.name_index]
         self.name_index += 1
@@ -389,7 +390,7 @@ class ProgramGenerator:
 
         total_chance = fork_chance + wait_chance + exit_chance
         if total_chance != 100:
-            print('fork/wait/exit chance must sum to 100, but sums to', total_chance)
+            print('fork/wait/exit 확률 합은 100이어야 합니다. 현재 합:', total_chance)
             exit(1)
 
         self.fork_chance = float(fork_chance) / 100.0
@@ -436,7 +437,7 @@ class Parser:
 
     def abort_if(self, condition, message):
         if condition:
-            print('bad program: [%s]' % self.orig_program)
+            print('잘못된 프로그램: [%s]' % self.orig_program)
             print(message)
             exit(1)
         return
@@ -506,16 +507,16 @@ class Parser:
 #
 
 parser = OptionParser()
-parser.add_option('-s', '--seed', default=-1, help='random seed', action='store', type='int', dest='seed')
-parser.add_option('-r', '--readable', default='read', help='file to read (e.g., "read", to produce read.c)', action='store', type='string', dest='readable')
-parser.add_option('-R', '--runnable', default='run', help='file to run (e.g., "run", to produce run.c)', action='store', type='string', dest='runnable')
-parser.add_option('-n', '--num_actions', default=10, help='num actions', action='store', type='int', dest='num_actions')
-parser.add_option('-f', '--fork_chance', default=30, help='chances that a program will fork', action='store', type='int', dest='fork_chance')
-parser.add_option('-w', '--wait_chance', default=40, help='chances that a program will wait', action='store', type='int', dest='wait_chance')
-parser.add_option('-e', '--exit_chance', default=30, help='chances that a program will exit', action='store', type='int', dest='exit_chance')
-parser.add_option('-S', '--sleep_time', default=10, help='max sleep time for a process', action='store', type='int', dest='max_sleep_time')
-parser.add_option('-A', '--action_list', default='none', help='action list, instead of randomly generated ones (simple example: "fork b,10 {} wait" is a program that runs a process (called a) which then forks process b which runs for 10 seconds, and then a waits for b to complete; see README for details', action='store', type='string', dest='action_list')
-parser.add_option('-c', '--compute', help='compute answers for me', action='store_true', default=False, dest='solve')
+parser.add_option('-s', '--seed', default=-1, help='난수 시드 (같은 값으로 같은 문제 재현)', action='store', type='int', dest='seed')
+parser.add_option('-r', '--readable', default='read', help='읽기용 소스 파일의 이름 (예: read를 지정하면 read.c 생성)', action='store', type='string', dest='readable')
+parser.add_option('-R', '--runnable', default='run', help='실행용 소스 파일의 이름 (예: run을 지정하면 run.c 생성)', action='store', type='string', dest='runnable')
+parser.add_option('-n', '--num_actions', default=10, help='동작 수', action='store', type='int', dest='num_actions')
+parser.add_option('-f', '--fork_chance', default=30, help='프로그램이 fork를 수행할 확률', action='store', type='int', dest='fork_chance')
+parser.add_option('-w', '--wait_chance', default=40, help='프로그램이 wait를 수행할 확률', action='store', type='int', dest='wait_chance')
+parser.add_option('-e', '--exit_chance', default=30, help='프로그램이 exit를 수행할 확률', action='store', type='int', dest='exit_chance')
+parser.add_option('-S', '--sleep_time', default=10, help='프로세스의 최대 대기 시간', action='store', type='int', dest='max_sleep_time')
+parser.add_option('-A', '--action_list', default='none', help='동작을 직접 지정 (예: "fork b,10 {} wait"는 a가 자식 b를 생성하고, b는 10초 실행하며, a는 b의 종료를 기다림. 자세한 내용은 README 참조)', action='store', type='string', dest='action_list')
+parser.add_option('-c', '--compute', help='정답과 계산 결과 표시', action='store_true', default=False, dest='solve')
 
 (options, args) = parser.parse_args()
 
@@ -523,19 +524,19 @@ if options.seed != -1:
     random_seed(options.seed)
 
 if options.max_sleep_time < 1:
-    print('max sleep time must be >= 1')
+    print('최대 대기 시간은 1 이상이어야 합니다')
     exit(1)
 
 if options.fork_chance < 1 or options.fork_chance > 99:
-    print('fork chance must be between 1 and 99')
+    print('fork 확률은 1~99여야 합니다')
     exit(1)
 
 if options.wait_chance < 1 or options.wait_chance > 99:
-    print('wait chance must be between 1 and 99')
+    print('wait 확률은 1~99여야 합니다')
     exit(1)
 
 if options.exit_chance < 1 or options.exit_chance > 99:
-    print('exit chance must be between 1 and 99')
+    print('exit 확률은 1~99여야 합니다')
     exit(1)
 
 if options.action_list == 'none':
@@ -568,3 +569,10 @@ else:
 
     
     
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - fork는 자식 생성, wait는 자식 종료 대기, exit는 종료입니다. 부모가 기다리는 자식과 실행 순서를 연결해서 읽으세요.
+  - 이 도구는 C 소스를 생성합니다. 생성되는 코드와 실행 조건은 원본 그대로이며, POSIX 환경에서 컴파일해 실행합니다.
+""")

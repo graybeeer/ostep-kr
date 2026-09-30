@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 from __future__ import division
@@ -87,19 +88,19 @@ class Disk:
         else:
             self.fairWindow = -1
 
-        print('REQUESTS', self.requests)
+        print('요청 목록', self.requests)
         print('')
 
         # for late requests
         self.lateCount = 0
         if len(self.lateRequests) > 0:
-            print('LATE REQUESTS', self.lateRequests)
+            print('나중에 도착하는 요청', self.lateRequests)
             print('')
 
         if self.compute == False:
             print('')
-            print('For the requests above, compute the seek, rotate, and transfer times.')
-            print('Use -c or the graphical mode (-G) to see the answers.')
+            print('위 요청들의 탐색 시간, 회전 대기 시간, 전송 시간을 계산하세요.')
+            print('-c 또는 그래픽 모드(-G)로 정답을 확인하세요.')
             print('')
 
         # BINDINGS
@@ -116,13 +117,13 @@ class Disk:
         self.tracks[2]  = self.tracks[1] - self.trackWidth
 
         if (self.seekSpeed > 1 and self.trackWidth % self.seekSpeed != 0):
-            print('Seek speed (%f) must divide evenly into track width (%f)' % (self.seekSpeed, self.trackWidth))
+            print('탐색 속도 (%f)는 트랙 폭 (%f)을 나누어떨어지게 해야 합니다' % (self.seekSpeed, self.trackWidth))
             sys.exit(1)
         if self.seekSpeed < 1:
             x = self.trackWidth / self.seekSpeed
             y = int(float(self.trackWidth) / float(self.seekSpeed))
             if float(x) != float(y):
-                print('Seek speed (%f) must divide evenly into track width (%f)' % (self.seekSpeed, self.trackWidth))
+                print('탐색 속도 (%f)는 트랙 폭 (%f)을 나누어떨어지게 해야 합니다' % (self.seekSpeed, self.trackWidth))
                 sys.exit(1)
 
         # DISK SURFACE
@@ -258,11 +259,11 @@ class Disk:
 
     # crappy error message
     def PrintAddrDescMessage(self, value):
-        print('Bad address description (%s)' % value)
-        print('The address description must be a comma-separated list of length three, without spaces.')
-        print('For example, "10,100,0" would indicate that 10 addresses should be generated, with')
-        print('100 as the maximum value, and 0 as the minumum. A max of -1 means just use the highest')
-        print('possible value as the max address to generate.')
+        print('잘못된 주소 생성 설정 (%s)' % value)
+        print('주소 생성 설정은 공백 없이 쉼표로 구분한 세 값이어야 합니다.')
+        print('예: "10,100,0"은 주소 10개를 생성하며,')
+        print('최댓값은 100, 최솟값은 0입니다. 최댓값 -1은')
+        print('사용 가능한 최대 주소를 뜻합니다.')
         sys.exit(1)
     
     #
@@ -584,7 +585,7 @@ class Disk:
             # then, do SATF on those blocks (otherwise, will not do them in obvious order)
             (self.currentBlock, self.currentIndex) = self.DoSATF(trackList)
         else:
-            print('policy (%s) not implemented' % self.policy)
+            print('정책 (%s)은 구현되지 않았습니다' % self.policy)
             sys.exit(1)
 
         # once best block is decided, go ahead and do the seek
@@ -664,7 +665,7 @@ class Disk:
         totalTime = self.timer     - self.seekBegin
 
         if self.compute == True:
-            print('Block: %3d  Seek:%3d  Rotate:%3d  Transfer:%3d  Total:%4d' % (self.currentBlock, seekTime, rotTime, xferTime, totalTime))
+            print('블록: %3d  탐색:%3d  회전 대기:%3d  전송:%3d  합계:%4d' % (self.currentBlock, seekTime, rotTime, xferTime, totalTime))
 
         # if int(totalTime) != int(self.totalEst):
         #     print 'INTERNAL ERROR: estimate was', self.totalEst, 'whereas actual time to access block was', totalTime
@@ -679,7 +680,7 @@ class Disk:
 
     def PrintStats(self):
         if self.compute == True:
-            print('\nTOTALS      Seek:%3d  Rotate:%3d  Transfer:%3d  Total:%4d\n' % (self.seekTotal, self.rotTotal, self.xferTotal, self.timer))
+            print('\n총합        탐색:%3d  회전 대기:%3d  전송:%3d  합계:%4d\n' % (self.seekTotal, self.rotTotal, self.xferTotal, self.timer))
         
 # END: class Disk
 
@@ -689,42 +690,42 @@ class Disk:
 # MAIN SIMULATOR
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed',            default='0',         help='Random seed',                                             action='store', type='int',    dest='seed')
-parser.add_option('-a', '--addr',            default='-1',        help='Request list (comma-separated) [-1 -> use addrDesc]',     action='store', type='string', dest='addr')
-parser.add_option('-A', '--addrDesc',        default='5,-1,0',    help='Num requests, max request (-1->all), min request',        action='store', type='string', dest='addrDesc')
-parser.add_option('-S', '--seekSpeed',       default='1',         help='Speed of seek',                                           action='store', type='string', dest='seekSpeed')
-parser.add_option('-R', '--rotSpeed',        default='1',         help='Speed of rotation',                                       action='store', type='string', dest='rotateSpeed')
-parser.add_option('-p', '--policy',          default='FIFO',      help='Scheduling policy (FIFO, SSTF, SATF, BSATF)',             action='store', type='string', dest='policy')
-parser.add_option('-w', '--schedWindow',     default=-1,          help='Size of scheduling window (-1 -> all)',                   action='store', type='int',    dest='window')
-parser.add_option('-o', '--skewOffset',      default=0,           help='Amount of skew (in blocks)',                              action='store', type='int',    dest='skew')
-parser.add_option('-z', '--zoning',          default='30,30,30',  help='Angles between blocks on outer,middle,inner tracks',      action='store', type='string', dest='zoning')
-parser.add_option('-G', '--graphics',        default=False,       help='Turn on graphics',                                        action='store_true',           dest='graphics')
-parser.add_option('-l', '--lateAddr',        default='-1',        help='Late: request list (comma-separated) [-1 -> random]',     action='store', type='string', dest='lateAddr')
-parser.add_option('-L', '--lateAddrDesc',    default='0,-1,0',    help='Num requests, max request (-1->all), min request',        action='store', type='string', dest='lateAddrDesc')
-parser.add_option('-c', '--compute',         default=False,       help='Compute the answers',                                     action='store_true',           dest='compute')
+parser.add_option('-s', '--seed',            default='0',         help='난수 시드 (같은 값으로 같은 문제 재현)',                                             action='store', type='int',    dest='seed')
+parser.add_option('-a', '--addr',            default='-1',        help='요청 목록 (쉼표로 구분, -1이면 addrDesc로 생성)',     action='store', type='string', dest='addr')
+parser.add_option('-A', '--addrDesc',        default='5,-1,0',    help='요청 수, 최대 요청 주소(-1: 전체 범위), 최소 요청 주소',        action='store', type='string', dest='addrDesc')
+parser.add_option('-S', '--seekSpeed',       default='1',         help='헤드 탐색 속도',                                           action='store', type='string', dest='seekSpeed')
+parser.add_option('-R', '--rotSpeed',        default='1',         help='디스크 회전 속도',                                       action='store', type='string', dest='rotateSpeed')
+parser.add_option('-p', '--policy',          default='FIFO',      help='스케줄링 정책 (FIFO, SSTF, SATF, BSATF)',             action='store', type='string', dest='policy')
+parser.add_option('-w', '--schedWindow',     default=-1,          help='스케줄링 시 살펴볼 요청 범위 (-1: 전체)',                   action='store', type='int',    dest='window')
+parser.add_option('-o', '--skewOffset',      default=0,           help='트랙 간 시작 위치 차이 (블록 단위)',                              action='store', type='int',    dest='skew')
+parser.add_option('-z', '--zoning',          default='30,30,30',  help='바깥/중간/안쪽 트랙의 블록 사이 각도',      action='store', type='string', dest='zoning')
+parser.add_option('-G', '--graphics',        default=False,       help='그래픽 화면 표시',                                        action='store_true',           dest='graphics')
+parser.add_option('-l', '--lateAddr',        default='-1',        help='나중에 도착하는 요청 목록 (쉼표 구분, -1: 임의 생성)',     action='store', type='string', dest='lateAddr')
+parser.add_option('-L', '--lateAddrDesc',    default='0,-1,0',    help='요청 수, 최대 요청 주소(-1: 전체 범위), 최소 요청 주소',        action='store', type='string', dest='lateAddrDesc')
+parser.add_option('-c', '--compute',         default=False,       help='정답과 계산 결과 표시',                                     action='store_true',           dest='compute')
 (options, args) = parser.parse_args()
 
-print('OPTIONS seed', options.seed)
-print('OPTIONS addr', options.addr)
-print('OPTIONS addrDesc', options.addrDesc)
-print('OPTIONS seekSpeed', options.seekSpeed)
-print('OPTIONS rotateSpeed', options.rotateSpeed)
-print('OPTIONS skew', options.skew)
-print('OPTIONS window', options.window)
-print('OPTIONS policy', options.policy)
-print('OPTIONS compute', options.compute)
-print('OPTIONS graphics', options.graphics)
-print('OPTIONS zoning', options.zoning)
-print('OPTIONS lateAddr', options.lateAddr)
-print('OPTIONS lateAddrDesc', options.lateAddrDesc)
+print('설정 난수 시드 (seed)', options.seed)
+print('설정 요청 주소 (addr)', options.addr)
+print('설정 요청 생성 설정 (addrDesc)', options.addrDesc)
+print('설정 탐색 속도 (seekSpeed)', options.seekSpeed)
+print('설정 회전 속도 (rotateSpeed)', options.rotateSpeed)
+print('설정 트랙 간 시작 위치 차이 (skew)', options.skew)
+print('설정 스케줄링 요청 범위 (window)', options.window)
+print('설정 정책 (policy)', options.policy)
+print('설정 정답 표시 (compute)', options.compute)
+print('설정 그래픽 표시 (graphics)', options.graphics)
+print('설정 트랙별 블록 간 각도 (zoning)', options.zoning)
+print('설정 나중에 도착할 요청 (lateAddr)', options.lateAddr)
+print('설정 추가 요청 생성 설정 (lateAddrDesc)', options.lateAddrDesc)
 print('')
 
 if options.window == 0:
-    print('Scheduling window (%d) must be positive or -1 (which means a full window)' % options.window)
+    print('스케줄링 범위 (%d)는 양수 또는 -1(전체)이어야 합니다' % options.window)
     sys.exit(1)
 
 if options.graphics and options.compute == False:
-    print('\nWARNING: Setting compute flag to True, as graphics are on\n')
+    print('\n알림: 그래픽 모드에서는 정답 계산이 자동으로 켜집니다\n')
     options.compute = True
 
 # set up simulator info
@@ -734,3 +735,11 @@ d = Disk(addr=options.addr, addrDesc=options.addrDesc, lateAddr=options.lateAddr
 
 # run simulation
 d.Go()
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 탐색(Seek)은 헤드가 목표 트랙으로 움직이는 시간, 회전 대기(Rotate)는 목표 블록이 헤드 아래로 올 때까지의 시간입니다.
+  - 전송(Transfer)은 블록을 읽거나 쓰는 시간이며, 요청별 합계는 이 세 시간의 합입니다. 블록 번호는 데이터의 위치를 나타냅니다.
+  - FIFO는 요청 순서, SSTF는 가까운 트랙 우선, SATF는 접근 시간이 짧은 요청 우선입니다. 탐색만 줄이는 것과 전체 시간을 줄이는 것은 다릅니다.
+""")

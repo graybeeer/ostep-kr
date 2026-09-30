@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import math
@@ -89,7 +90,7 @@ class file_system:
 
     def set_name_to_inode(self, path, inode_num):
         if path in self.name_to_inode_map:
-            print('abort: path already in mapping (internal error)')
+            print('중단: 경로가 이미 매핑에 있습니다 (내부 오류)')
             exit(1)
         self.name_to_inode_map[path] = inode_num
         return
@@ -174,7 +175,7 @@ class file_system:
             # find group with most free inodes
             return self.find_most_free_inodes_multiple(0, self.allocate_faraway)
         else:
-            print('abort: bad file type [%s] (internal error)' % type)
+            print('중단: 잘못된 파일 유형 [%s] (내부 오류)' % type)
             exit(1)
         return 0
 
@@ -341,7 +342,7 @@ class file_system:
         # allocated = self.allocate_blocks(group, size, inode_number)
         if self.spread_data_blocks:
             dest_block_group = self.find_min_data_usage()
-            print('target alloc', dest_block_group)
+            print('할당 대상', dest_block_group)
             allocated = self.allocate_blocks(dest_block_group, size, inode_number)
         else:
             allocated = self.allocate_blocks(group, size, inode_number)
@@ -408,9 +409,9 @@ class file_system:
     def print_success_or_fail(self, rc):
         if self.show_file_ops:
             if rc == 0:
-                print('success')
+                print('성공')
             else:
-                print('failed')
+                print('실패')
         return
 
     def do_verify(self):
@@ -480,7 +481,7 @@ class file_system:
                 assert(len(tmp) == 1)
                 self.dump()
             else:
-                print('command not recognized', tmp[0])
+                print('알 수 없는 명령', tmp[0])
                 exit(1)
             self.do_verify()
         fd.close()
@@ -515,16 +516,16 @@ class file_system:
 
     def dump(self):
         print('')
-        print('num_groups:      ', self.num_groups)
-        print('inodes_per_group:', self.inodes_per_group)
-        print('blocks_per_group:', self.blocks_per_group)
+        print('그룹 수:          ', self.num_groups)
+        print('그룹당 아이노드 수:', self.inodes_per_group)
+        print('그룹당 블록 수:   ', self.blocks_per_group)
         print('')
-        print('free data blocks: %d (of %d)' % (self.total_data_free, (self.num_groups * self.blocks_per_group)))
-        print('free inodes:      %d (of %d)' % (self.total_inodes_free, (self.num_groups * self.inodes_per_group)))
+        print('빈 데이터 블록: %d (전체 %d)' % (self.total_data_free, (self.num_groups * self.blocks_per_group)))
+        print('빈 아이노드:    %d (전체 %d)' % (self.total_inodes_free, (self.num_groups * self.inodes_per_group)))
         print('')
-        print('spread inodes?   ', self.spread_inodes)
-        print('spread data?     ', self.spread_data_blocks)
-        print('contig alloc:    ', self.contig_allocation_policy)
+        print('아이노드 분산?    ', self.spread_inodes)
+        print('데이터 분산?      ', self.spread_data_blocks)
+        print('연속 할당 크기:   ', self.contig_allocation_policy)
         print('')
 
         inode_power = len('%s' % self.inodes_per_group) - 1
@@ -552,11 +553,11 @@ class file_system:
             print('')
             max_power -= 1
 
-        print('\ngroup %s' % ('inodes'[0:self.inodes_per_group]), end='')
+        print('\n그룹  %s' % ('inodes'[0:self.inodes_per_group]), end='')
         out_str = ''
         for i in range(self.inodes_per_group - len('inodes')):
             out_str += ' '
-        print('%sdata' % out_str)
+        print('%s데이터' % out_str)
 
         count = 0
 
@@ -585,9 +586,9 @@ class file_system:
             print('')
             return
         
-        print('\nsymbol  inode#  filename     filetype ', end='')
+        print('\n기호    아이노드 번호  파일 이름    파일 유형 ', end='')
         if self.do_per_file_stats:
-            print('  block_addresses')
+            print('  블록 주소')
         else:
             print('')
         # sorted(student_tuples, key=lambda student: student[2])
@@ -642,7 +643,7 @@ class file_system:
         min_group = 1e6
         max_group = -1
     
-        print('span: files')
+        print('배치 범위: 파일')
         span_results = {}
         filespan_sum = 0
         filespan_cnt = 0
@@ -663,9 +664,9 @@ class file_system:
             span_results[inode_number] = (inode_address, min_address, max_address)
 
             if options.solve:
-                print('  file: %10s  filespan: %3d' % (f, file_span))
+                print('  파일: %10s  파일 배치 범위: %3d' % (f, file_span))
             else:
-                print('  file: %10s  filespan: %s' % (f, '?'))
+                print('  파일: %10s  파일 배치 범위: %s' % (f, '?'))
 
             filespan_sum += file_span
             filespan_cnt += 1
@@ -673,12 +674,12 @@ class file_system:
         if filespan_cnt > 0:
             filespan_avg = '%3.2f' % (float(filespan_sum)/float(filespan_cnt))
             if options.solve:
-                print('               avg  filespan: %6s' % (filespan_avg))
+                print('               평균 파일 배치 범위: %6s' % (filespan_avg))
             else:
-                print('               avg  filespan: ?')
+                print('               평균 파일 배치 범위: ?')
             
 
-        print('\nspan: directories')
+        print('\n배치 범위: 디렉터리')
         dirspan_sum = 0
         dirspan_cnt = 0
         for f in self.name_to_inode_map:
@@ -702,15 +703,15 @@ class file_system:
             dirspan_sum += dirspan
             dirspan_cnt += 1
             if options.solve:
-                print('  dir:  %10s  dirspan: %3d' % (f, dirspan))
+                print('  디렉터리: %10s  디렉터리 배치 범위: %3d' % (f, dirspan))
             else:
-                print('  dir:  %10s  dirspan: ?' % (f))
+                print('  디렉터리: %10s  디렉터리 배치 범위: ?' % (f))
 
         dirspan_avg = '%3.2f' % (float(dirspan_sum)/float(dirspan_cnt))
         if options.solve:
-            print('               avg  dirspan: %6s' % (dirspan_avg))
+            print('               평균 디렉터리 배치 범위: %6s' % (dirspan_avg))
         else:
-            print('               avg  dirspan: ?')
+            print('               평균 디렉터리 배치 범위: ?')
 
 
         print('')
@@ -723,48 +724,46 @@ class file_system:
 # main program
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed', default=0, help='the random seed', 
+parser.add_option('-s', '--seed', default=0, help='난수 시드 (같은 값으로 같은 문제 재현)',
                   action='store', type='int', dest='seed')
-parser.add_option('-n', '--num_groups', default=10, help='number of block groups',
+parser.add_option('-n', '--num_groups', default=10, help='블록 그룹 수',
                   action='store', type='int', dest='num_groups')
 parser.add_option('-d', '--datablocks_per_groups', default=30,
-                  help='data blocks per group', action='store',
+                  help='그룹당 데이터 블록 수', action='store',
                   type='int', dest='blocks_per_group')
-parser.add_option('-i', '--inodes_per_group', default=10, help='inodes per group',
+parser.add_option('-i', '--inodes_per_group', default=10, help='그룹당 아이노드 수',
                   action='store', type='int', dest='inodes_per_group')
 parser.add_option('-L', '--large_file_exception', default=30,
-                  help='0:off, N>0:blocks in group before spreading file to next group',
+                  help='0: 비활성화, 양수 N: 한 그룹에 N블록을 배치한 뒤 다음 그룹 사용',
                   action='store', type='int', dest='large_file_exception')
-parser.add_option('-f', '--input_file', default='/no/such/file', help='command file',
+parser.add_option('-f', '--input_file', default='/no/such/file', help='명령을 읽을 파일',
                   action='store', type='string', dest='input_file')
 parser.add_option('-I', '--spread_inodes', default=False,
-                  help='Instead of putting file inodes in parent dir group, \
-                  spread them evenly around all groups',
+                  help='파일 아이노드를 부모 디렉터리와 같은 그룹에 두는 대신 모든 그룹에 고르게 분산',
                   action='store_true', dest='spread_inodes')
 parser.add_option('-D', '--spread_data', default=False,
-                  help='Instead of putting data near inode, \
-                  spread them evenly around all groups',
+                  help='데이터를 아이노드 근처에 두는 대신 모든 그룹에 고르게 분산',
                   action='store_true', dest='spread_data_blocks')
 parser.add_option('-A', '--allocate_faraway', default=1,
-                  help='When picking a group, examine this many groups at a time',
+                  help='그룹 선택 시 한 번에 살펴볼 그룹 수',
                   action='store', dest='allocate_faraway', type='int')
 parser.add_option('-C', '--contig_allocation_policy', default=1,
-                  help='number of contig free blocks needed to alloc',
+                  help='할당에 필요한 연속된 빈 블록 수',
                   action='store', type='int', dest='contig_allocation_policy')
-parser.add_option('-T', '--show_spans', help='show file and directory spans',
+parser.add_option('-T', '--show_spans', help='파일과 디렉터리의 배치 범위 표시',
                   default=False, action='store_true', dest='show_spans')
-parser.add_option('-M', '--show_symbol_map', help='show symbol map',
+parser.add_option('-M', '--show_symbol_map', help='기호와 파일의 대응표 표시',
                   default=False, action='store_true', dest='show_symbol_map')
 parser.add_option('-B', '--show_block_addresses',
-                  help='show block addresses alongside groups',
+                  help='그룹 옆에 블록 주소 표시',
                   action='store_true', default=False, dest='show_block_addresses')
 parser.add_option('-S', '--do_per_file_stats',
-                  help='print out detailed inode stats',
+                  help='아이노드 상세 통계 표시',
                   action='store_true', default=False, dest='do_per_file_stats')
 parser.add_option('-v', '--show_file_ops',
-                  help='print out detailed per-op success/failure',
+                  help='각 동작의 성공/실패 표시',
                   action='store_true', default=False, dest='show_file_ops')
-parser.add_option('-c', '--compute', help='compute answers for me', action='store_true',
+parser.add_option('-c', '--compute', help='정답과 계산 결과 표시', action='store_true',
                   default=False, dest='solve')
 
 (options, args) = parser.parse_args()
@@ -791,3 +790,12 @@ fs.dump()
 
 if options.show_spans:
     fs.do_all_spans()
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 아이노드(inode)는 파일의 유형과 데이터 위치 등 메타데이터를 담습니다. 그룹은 아이노드와 데이터 블록을 가까이 배치하는 단위입니다.
+  - 기호 표에서 file은 파일, directory는 디렉터리입니다. 빈 블록 수와 빈 아이노드 수를 각각 확인하세요.
+  - 파일 배치 범위(filespan)는 아이노드와 데이터의 가장 먼 주소 차이입니다. 디렉터리 범위(dirspan)는 그 디렉터리와 직접 속한 파일들의 배치 범위입니다.
+  - 범위가 작으면 관련 블록이 가깝게 모여 있다는 뜻입니다. 실제 디스크 소요 시간을 직접 측정한 값은 아닙니다.
+""")

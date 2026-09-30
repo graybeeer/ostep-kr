@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import sys
@@ -31,7 +32,7 @@ def dospace(howmuch):
 # useful instead of assert
 def zassert(cond, str):
     if cond == False:
-        print('ABORT::', str)
+        print('중단::', str)
         exit(1)
     return
 
@@ -93,7 +94,7 @@ class cpu:
 
         tmplist = []
         for r in self.regtrace:
-            zassert(r in self.regnames, 'Register %s cannot be traced because it does not exist' % r)
+            zassert(r in self.regnames, '레지스터 %s은(는) 존재하지 않아 추적할 수 없습니다' % r)
             tmplist.append(self.regnames[r])
         self.regtrace = tmplist
 
@@ -117,7 +118,7 @@ class cpu:
             self.registers[i] = 0
 
     def dump_memory(self):
-        print('MEMORY DUMP')
+        print('메모리 내용')
         for i in range(self.max_memory):
             if i not in self.pmemory and i in self.memory and self.memory[i] != 0:
                 print('  m[%d]' % i, self.memory[i])
@@ -177,7 +178,7 @@ class cpu:
         return 0
 
     def rdump(self):
-        print('REGISTERS::', end=' ')
+        print('레지스터::', end=' ')
         print('ax:', self.registers[self.REG_AX], end=' ')
         print('bx:', self.registers[self.REG_BX], end=' ')
         print('cx:', self.registers[self.REG_CX], end=' ')
@@ -352,7 +353,7 @@ class cpu:
     def register_translate(self, r):
         if r in self.regnames:
             return self.regnames[r]
-        zassert(False, 'Register %s is not a valid register' % r)
+        zassert(False, '레지스터 %s은(는) 유효하지 않습니다' % r)
         return
 
     #
@@ -373,9 +374,9 @@ class cpu:
         tmp  = tmp1.replace(' \t', '')
 
         if tmp[0] == '$':
-            zassert(len(tmp) == 2, 'correct form is $number (not %s)' % tmp)
+            zassert(len(tmp) == 2, '올바른 형식은 $숫자입니다 (입력: %s)' % tmp)
             value = tmp.split('$')[1]
-            zassert(value.isdigit(), 'value [%s] must be a digit' % value)
+            zassert(value.isdigit(), '값 [%s]은(는) 숫자여야 합니다' % value)
             return int(value), 'TYPE_IMMEDIATE'
         elif tmp[0] == '%':
             register = tmp.split('%')[1]
@@ -387,7 +388,7 @@ class cpu:
             targ = tmp
             return targ, 'TYPE_LABEL'
         elif tmp[0].isalpha() and not tmp[0].isdigit():
-            zassert(tmp in self.vars, 'Variable %s is not declared' % tmp)
+            zassert(tmp in self.vars, '변수 %s이(가) 선언되지 않았습니다' % tmp)
             # print '%d,%d,%d' % (self.vars[tmp], self.register_translate('zero'), self.register_translate('zero')), 'TYPE_MEMORY'
             return '%d,%d,%d' % (self.vars[tmp], self.register_translate('zero'), self.register_translate('zero')), 'TYPE_MEMORY'
         elif tmp[0].isdigit() or tmp[0] == '-':
@@ -415,10 +416,10 @@ class cpu:
                     # print '%d,%d,%d' % (int(value), self.register_translate(register1), self.register_translate(register2)), 'TYPE_MEMORY'
                     return '%d,%d,%d' % (int(value), self.register_translate(register1), self.register_translate(register2)), 'TYPE_MEMORY'
             else:
-                print('mov: bad argument [%s]' % tmp)
+                print('mov: 잘못된 피연산자 [%s]' % tmp)
                 exit(1)
                 return
-        zassert(True, 'mov: bad argument [%s]' % arg)
+        zassert(True, 'mov: 잘못된 피연산자 [%s]' % arg)
         return
 
     #
@@ -453,12 +454,12 @@ class cpu:
                 assert(tmp[0] not in self.vars)
                 self.vars[tmp[1]] = data
                 data += 4
-                zassert(data < bpc, 'Load address overrun by static data')
-                if self.verbose: print('ASSIGN VAR', tmp[0], "-->", tmp[1], self.vars[tmp[1]])
+                zassert(data < bpc, '정적 데이터가 코드 적재 주소를 침범했습니다')
+                if self.verbose: print('변수 주소 배정', tmp[0], "-->", tmp[1], self.vars[tmp[1]])
             elif tmp[0][0] == '.':
                 assert(len(tmp) == 1)
                 self.labels[tmp[0]] = int(pc)
-                if self.verbose: print('ASSIGN LABEL', tmp[0], "-->", pc)
+                if self.verbose: print('레이블 주소 배정', tmp[0], "-->", pc)
             else:
                 pc += 1
         fd.close()
@@ -492,17 +493,17 @@ class cpu:
                 # MAIN OPCODE LOOP
                 if opcode == 'mov':
                     rtmp = tmp[1].split(',', 1)
-                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'mov: needs two args, separated by commas [%s]' % cline)
+                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'mov: 쉼표로 구분한 피연산자 두 개가 필요합니다 [%s]' % cline)
                     arg1 = rtmp[0].strip()
                     arg2 = rtmp[1].strip()
                     (src, stype) = self.getarg(arg1)
                     (dst, dtype) = self.getarg(arg2)
                     # print 'MOV', src, stype, dst, dtype
                     if stype == 'TYPE_MEMORY' and dtype == 'TYPE_MEMORY':
-                        print('bad mov: two memory arguments')
+                        print('잘못된 mov: 메모리 피연산자가 두 개입니다')
                         exit(1)
                     elif stype == 'TYPE_IMMEDIATE' and dtype == 'TYPE_IMMEDIATE':
-                        print('bad mov: two immediate arguments')
+                        print('잘못된 mov: 즉시값 피연산자가 두 개입니다')
                         exit(1)
                     elif stype == 'TYPE_IMMEDIATE' and dtype == 'TYPE_REGISTER':
                         self.memory[pc]  = 'self.move_i_to_r(%d, %d)' % (int(src), dst)
@@ -523,17 +524,17 @@ class cpu:
                         assert(len(tmp) == 3)
                         self.memory[pc] = 'self.move_i_to_m(%d, %d, %d, %d)' % (src, int(tmp[0]), int(tmp[1]), int(tmp[2]))
                     else:
-                        zassert(False, 'malformed mov instruction')
+                        zassert(False, 'mov 명령의 형식이 잘못되었습니다')
                 elif opcode == 'pop':
                     if len(tmp) == 1:
                         self.memory[pc] = 'self.pop()'
                     elif len(tmp) == 2:
                         arg = tmp[1].strip()
                         (dst, dtype) = self.getarg(arg)
-                        zassert(dtype == 'TYPE_REGISTER', 'Can only pop into a register')
+                        zassert(dtype == 'TYPE_REGISTER', 'pop의 목적지는 레지스터여야 합니다')
                         self.memory[pc] = 'self.pop_r(%d)' % dst
                     else:
-                        zassert(False, 'pop instruction must take zero/one args')
+                        zassert(False, 'pop 명령은 피연산자가 없거나 하나여야 합니다')
                 elif opcode == 'push':
                     (src, stype) = self.getarg(tmp[1].strip())
                     if stype == 'TYPE_REGISTER':
@@ -543,19 +544,19 @@ class cpu:
                         assert(len(tmp) == 3)
                         self.memory[pc] = 'self.push_m(%d,%d,%d)' % (int(tmp[0]), int(tmp[1]), int(tmp[2]))
                     else:
-                        zassert(False, 'Cannot push anything but registers')
+                        zassert(False, 'push는 레지스터에만 사용할 수 있습니다')
                 elif opcode == 'call':
                     (targ, ttype) = self.getarg(tmp[1].strip())
                     if ttype == 'TYPE_LABEL':
                         self.memory[pc] = 'self.call(%d)' % (int(self.labels[targ]))
                     else:
-                        zassert(False, 'Cannot call anything but a label')
+                        zassert(False, 'call의 대상은 레이블이어야 합니다')
                 elif opcode == 'ret':
                     assert(len(tmp) == 1)
                     self.memory[pc] = 'self.ret()'
                 elif opcode == 'add':
                     rtmp = tmp[1].split(',', 1)
-                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'add: needs two args, separated by commas [%s]' % cline)
+                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'add: 쉼표로 구분한 피연산자 두 개가 필요합니다 [%s]' % cline)
                     arg1 = rtmp[0].strip()
                     arg2 = rtmp[1].strip()
                     (src, stype) = self.getarg(arg1)
@@ -565,10 +566,10 @@ class cpu:
                     elif stype == 'TYPE_REGISTER' and dtype == 'TYPE_REGISTER':
                         self.memory[pc] = 'self.add_r_to_r(%d, %d)' % (int(src), dst)
                     else:
-                        zassert(False, 'malformed usage of add instruction')
+                        zassert(False, 'add 명령의 사용 형식이 잘못되었습니다')
                 elif opcode == 'sub':
                     rtmp = tmp[1].split(',', 1)
-                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'sub: needs two args, separated by commas [%s]' % cline)
+                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'sub: 쉼표로 구분한 피연산자 두 개가 필요합니다 [%s]' % cline)
                     arg1 = rtmp[0].strip()
                     arg2 = rtmp[1].strip()
                     (src, stype) = self.getarg(arg1)
@@ -578,10 +579,10 @@ class cpu:
                     elif stype == 'TYPE_REGISTER' and dtype == 'TYPE_REGISTER':
                         self.memory[pc] = 'self.sub_r_to_r(%d, %d)' % (int(src), dst)
                     else:
-                        zassert(False, 'malformed usage of sub instruction')
+                        zassert(False, 'sub 명령의 사용 형식이 잘못되었습니다')
                 elif opcode == 'fetchadd':
                     rtmp = tmp[1].split(',', 1)
-                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'fetchadd: needs two args, separated by commas [%s]' % cline)
+                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'fetchadd: 쉼표로 구분한 피연산자 두 개가 필요합니다 [%s]' % cline)
                     arg1 = rtmp[0].strip()
                     arg2 = rtmp[1].strip()
                     (src, stype) = self.getarg(arg1)
@@ -591,10 +592,10 @@ class cpu:
                     if stype == 'TYPE_REGISTER' and dtype == 'TYPE_MEMORY':
                         self.memory[pc] = 'self.fetchadd(%d, %d, %d, %d)' % (src, int(tmp[0]), int(tmp[1]), int(tmp[2]))
                     else:
-                        zassert(False, 'poorly specified fetch and add')
+                        zassert(False, '원자적 가져오기-더하기 명령이 잘못 지정되었습니다')
                 elif opcode == 'xchg':
                     rtmp = tmp[1].split(',', 1)
-                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'xchg: needs two args, separated by commas [%s]' % cline)
+                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'xchg: 쉼표로 구분한 피연산자 두 개가 필요합니다 [%s]' % cline)
                     arg1 = rtmp[0].strip()
                     arg2 = rtmp[1].strip()
                     (src, stype) = self.getarg(arg1)
@@ -604,10 +605,10 @@ class cpu:
                     if stype == 'TYPE_REGISTER' and dtype == 'TYPE_MEMORY':
                         self.memory[pc] = 'self.atomic_exchange(%d, %d, %d, %d)' % (src, int(tmp[0]), int(tmp[1]), int(tmp[2]))
                     else:
-                        zassert(False, 'poorly specified atomic exchange')
+                        zassert(False, '원자적 교환 명령이 잘못 지정되었습니다')
                 elif opcode == 'test':
                     rtmp = tmp[1].split(',', 1)
-                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'test: needs two args, separated by commas [%s]' % cline)
+                    zassert(len(tmp) == 2 and len(rtmp) == 2, 'test: 쉼표로 구분한 피연산자 두 개가 필요합니다 [%s]' % cline)
                     arg1 = rtmp[0].strip()
                     arg2 = rtmp[1].strip()
                     (src, stype) = self.getarg(arg1)
@@ -619,34 +620,34 @@ class cpu:
                     elif stype == 'TYPE_REGISTER' and dtype == 'TYPE_IMMEDIATE':
                         self.memory[pc] = 'self.test_r_i(%d, %d)' % (int(src), dst)
                     else:
-                        zassert(False, 'malformed usage of test instruction')
+                        zassert(False, 'test 명령의 사용 형식이 잘못되었습니다')
                 elif opcode == 'j':
                     (targ, ttype) = self.getarg(tmp[1].strip())
-                    zassert(ttype == 'TYPE_LABEL', 'bad jump target [%s]' % tmp[1].strip())
+                    zassert(ttype == 'TYPE_LABEL', '잘못된 분기 대상 [%s]' % tmp[1].strip())
                     self.memory[pc] = 'self.jump(%d)' % int(self.labels[targ])
                 elif opcode == 'jne':
                     (targ, ttype) = self.getarg(tmp[1].strip())
-                    zassert(ttype == 'TYPE_LABEL', 'bad jump target [%s]' % tmp[1].strip())
+                    zassert(ttype == 'TYPE_LABEL', '잘못된 분기 대상 [%s]' % tmp[1].strip())
                     self.memory[pc] = 'self.jump_notequal(%d)' % int(self.labels[targ])
                 elif opcode == 'je':
                     (targ, ttype) = self.getarg(tmp[1].strip())
-                    zassert(ttype == 'TYPE_LABEL', 'bad jump target [%s]' % tmp[1].strip())
+                    zassert(ttype == 'TYPE_LABEL', '잘못된 분기 대상 [%s]' % tmp[1].strip())
                     self.memory[pc] = 'self.jump_equal(%d)' % self.labels[targ]
                 elif opcode == 'jlt':
                     (targ, ttype) = self.getarg(tmp[1].strip())
-                    zassert(ttype == 'TYPE_LABEL', 'bad jump target [%s]' % tmp[1].strip())
+                    zassert(ttype == 'TYPE_LABEL', '잘못된 분기 대상 [%s]' % tmp[1].strip())
                     self.memory[pc] = 'self.jump_lessthan(%d)' % int(self.labels[targ])
                 elif opcode == 'jlte':
                     (targ, ttype) = self.getarg(tmp[1].strip())
-                    zassert(ttype == 'TYPE_LABEL', 'bad jump target [%s]' % tmp[1].strip())
+                    zassert(ttype == 'TYPE_LABEL', '잘못된 분기 대상 [%s]' % tmp[1].strip())
                     self.memory[pc] = 'self.jump_lessthanorequal(%s)' % self.labels[targ]
                 elif opcode == 'jgt':
                     (targ, ttype) = self.getarg(tmp[1].strip())
-                    zassert(ttype == 'TYPE_LABEL', 'bad jump target [%s]' % tmp[1].strip())
+                    zassert(ttype == 'TYPE_LABEL', '잘못된 분기 대상 [%s]' % tmp[1].strip())
                     self.memory[pc] = 'self.jump_greaterthan(%d)' % int(self.labels[targ])
                 elif opcode == 'jgte':
                     (targ, ttype) = self.getarg(tmp[1].strip())
-                    zassert(ttype == 'TYPE_LABEL', 'bad jump target [%s]' % tmp[1].strip())
+                    zassert(ttype == 'TYPE_LABEL', '잘못된 분기 대상 [%s]' % tmp[1].strip())
                     self.memory[pc] = 'self.jump_greaterthanorequal(%s)' % self.labels[targ]
                 elif opcode == 'nop':
                     self.memory[pc] = 'self.nop()'
@@ -659,10 +660,10 @@ class cpu:
                 elif opcode == 'mdump':
                     self.memory[pc] = 'self.mdump(%s)' % tmp[1]
                 else:
-                    print('illegal opcode: ', opcode)
+                    print('잘못된 명령 코드: ', opcode)
                     exit(1)
 
-                if self.verbose: print('pc:%d LOADING %20s --> %s' % (pc, self.pmemory[pc], self.memory[pc]))
+                if self.verbose: print('명령 주소:%d 불러오기 %20s --> %s' % (pc, self.pmemory[pc], self.memory[pc]))
                 
                 # INCREMENT PC for loader
                 pc += 1
@@ -679,7 +680,7 @@ class cpu:
                 if m[0].isdigit():
                     print('%5d' % int(m), end=' ')
                 else:
-                    zassert(m in self.vars, 'Traced variable %s not declared' % m)
+                    zassert(m in self.vars, '추적할 변수 %s이(가) 선언되지 않았습니다' % m)
                     print('%5s' % m, end=' ')
             print(' ', end=' ')
         if len(self.regtrace) > 0:
@@ -691,7 +692,7 @@ class cpu:
 
         # and per thread
         for i in range(procs.getnum()):
-            print('       Thread %d        ' % i, end=' ')
+            print('      스레드 %d        ' % i, end=' ')
         print('')
         return
 
@@ -702,7 +703,7 @@ class cpu:
                     if m[0].isdigit():
                         print('%5d' % self.memory[int(m)], end=' ')
                     else:
-                        zassert(m in self.vars, 'Traced variable %s not declared' % m)
+                        zassert(m in self.vars, '추적할 변수 %s이(가) 선언되지 않았습니다' % m)
                         print('%5d' % self.memory[self.vars[m]], end=' ')
                 else:
                     print('%5s' % '?', end=' ')
@@ -771,7 +772,7 @@ class cpu:
 
                 self.print_trace(False)
                 for i in range(procs.getnum()):
-                    print('----- Halt;Switch ----- ', end=' ')
+                    print('----- 종료; 전환 ----- ', end=' ')
                 print('')
 
             # do interrupt processing
@@ -784,7 +785,7 @@ class cpu:
 
                 self.print_trace(False)
                 for i in range(procs.getnum()):
-                    print('------ Interrupt ------ ', end=' ')
+                    print('------ 인터럽트 ------ ', end=' ')
                 print('')
         # END: while
         return
@@ -896,50 +897,50 @@ class process:
 # main program
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed',      default=0,          help='the random seed',                  action='store',      type='int',    dest='seed')
-parser.add_option('-t', '--threads',   default=2,          help='number of threads',                action='store',      type='int',    dest='numthreads')
-parser.add_option('-p', '--program',   default='',         help='source program (in .s)',           action='store',      type='string', dest='progfile')
-parser.add_option('-i', '--interrupt', default=50,         help='interrupt frequency',              action='store',      type='int',    dest='intfreq')
-parser.add_option('-r', '--randints',  default=False,      help='if interrupts are random',         action='store_true',                dest='intrand')
+parser.add_option('-s', '--seed',      default=0,          help='난수 시드 (같은 값으로 같은 문제 재현)',                  action='store',      type='int',    dest='seed')
+parser.add_option('-t', '--threads',   default=2,          help='스레드 수',                action='store',      type='int',    dest='numthreads')
+parser.add_option('-p', '--program',   default='',         help='실행할 어셈블리 소스 파일 (.s)',           action='store',      type='string', dest='progfile')
+parser.add_option('-i', '--interrupt', default=50,         help='인터럽트 간격 (명령어 수)',              action='store',      type='int',    dest='intfreq')
+parser.add_option('-r', '--randints',  default=False,      help='인터럽트 간격을 무작위로 선택',         action='store_true',                dest='intrand')
 parser.add_option('-a', '--argv',      default='',
-                  help='comma-separated per-thread args (e.g., ax=1,ax=2 sets thread 0 ax reg to 1 and thread 1 ax reg to 2); specify multiple regs per thread via colon-separated list (e.g., ax=1:bx=2,cx=3 sets thread 0 ax and bx and just cx for thread 1)',
+                  help='스레드별 초기 레지스터 값을 쉼표로 구분 (ax=1,ax=2). 한 스레드의 여러 레지스터는 콜론으로 구분 (ax=1:bx=2,cx=3)',
                   action='store',      type='string', dest='argv')
-parser.add_option('-L', '--loadaddr',  default=1000,       help='address where to load code',       action='store',      type='int',    dest='loadaddr')
-parser.add_option('-m', '--memsize',   default=128,        help='size of address space (KB)',       action='store',      type='int',    dest='memsize')
-parser.add_option('-M', '--memtrace',  default='',         help='comma-separated list of addrs to trace (e.g., 20000,20001)', action='store',
+parser.add_option('-L', '--loadaddr',  default=1000,       help='코드를 올릴 시작 주소',       action='store',      type='int',    dest='loadaddr')
+parser.add_option('-m', '--memsize',   default=128,        help='주소 공간 크기 (KB)',       action='store',      type='int',    dest='memsize')
+parser.add_option('-M', '--memtrace',  default='',         help='추적할 메모리 주소를 쉼표로 구분 (예: 20000,20001)', action='store',
                   type='string', dest='memtrace')
-parser.add_option('-R', '--regtrace',  default='',         help='comma-separated list of regs to trace (e.g., ax,bx,cx,dx)',  action='store',
+parser.add_option('-R', '--regtrace',  default='',         help='추적할 레지스터를 쉼표로 구분 (예: ax,bx,cx,dx)',  action='store',
                   type='string', dest='regtrace')
-parser.add_option('-C', '--cctrace',   default=False,      help='should we trace condition codes',  action='store_true', dest='cctrace')
-parser.add_option('-S', '--printstats',default=False,      help='print some extra stats',           action='store_true', dest='printstats')
-parser.add_option('-v', '--verbose',   default=False,      help='print some extra info',            action='store_true', dest='verbose')
-parser.add_option('-c', '--compute',   default=False,      help='compute answers for me',           action='store_true', dest='solve')
+parser.add_option('-C', '--cctrace',   default=False,      help='조건 코드도 추적',  action='store_true', dest='cctrace')
+parser.add_option('-S', '--printstats',default=False,      help='추가 통계 표시',           action='store_true', dest='printstats')
+parser.add_option('-v', '--verbose',   default=False,      help='추가 정보 표시',            action='store_true', dest='verbose')
+parser.add_option('-c', '--compute',   default=False,      help='정답과 계산 결과 표시',           action='store_true', dest='solve')
 (options, args) = parser.parse_args()
 
-print('ARG seed',                options.seed)
-print('ARG numthreads',          options.numthreads)
-print('ARG program',             options.progfile)
-print('ARG interrupt frequency', options.intfreq)
-print('ARG interrupt randomness',options.intrand)
-print('ARG argv',                options.argv)
-print('ARG load address',        options.loadaddr)
-print('ARG memsize',             options.memsize)
-print('ARG memtrace',            options.memtrace)
-print('ARG regtrace',            options.regtrace)
-print('ARG cctrace',             options.cctrace)
-print('ARG printstats',          options.printstats)
-print('ARG verbose',             options.verbose)
+print('설정 난수 시드 (seed)',                options.seed)
+print('설정 스레드 수 (numthreads)',          options.numthreads)
+print('설정 소스 프로그램 (program)',             options.progfile)
+print('설정 인터럽트 간격 (interrupt frequency)', options.intfreq)
+print('설정 인터럽트 무작위 여부 (interrupt randomness)',options.intrand)
+print('설정 초기 레지스터 값 (argv)',                options.argv)
+print('설정 코드 시작 주소 (load address)',        options.loadaddr)
+print('설정 메모리 크기 (memsize)',             options.memsize)
+print('설정 추적할 메모리 주소 (memtrace)',            options.memtrace)
+print('설정 추적할 레지스터 (regtrace)',            options.regtrace)
+print('설정 조건 코드 추적 (cctrace)',             options.cctrace)
+print('설정 통계 표시 (printstats)',          options.printstats)
+print('설정 상세 정보 표시 (verbose)',             options.verbose)
 print('')
 
 seed       = int(options.seed)
 numthreads = int(options.numthreads)
 intfreq    = int(options.intfreq)
-zassert(intfreq > 0, 'Interrupt frequency must be greater than 0')
+zassert(intfreq > 0, '인터럽트 간격은 0보다 커야 합니다')
 intrand    = int(options.intrand)
 progfile   = options.progfile
-zassert(progfile != '', 'Program file must be specified')
+zassert(progfile != '', '프로그램 파일을 지정해야 합니다')
 argv       = options.argv.split(',')
-zassert(len(argv) == numthreads or len(argv) == 1, 'argv: must be one per-thread or just one set of values for all threads') 
+zassert(len(argv) == numthreads or len(argv) == 1, 'argv: 스레드마다 하나씩 지정하거나 전체 스레드에 공통인 값 한 묶음을 지정하세요')
 
 loadaddr   = options.loadaddr
 memsize    = options.memsize
@@ -996,8 +997,8 @@ if printstats:
 
 if printstats:
     print('')
-    print('STATS:: Instructions    %d' % ic)
-    print('STATS:: Emulation Rate  %.2f kinst/sec' % (float(ic) / float(t2 - t1) / 1000.0))
+    print('통계:: 실행한 명령어 수 %d' % ic)
+    print('통계:: 시뮬레이터 실행 속도 %.2f 천 명령어/초' % (float(ic) / float(t2 - t1) / 1000.0))
 
 # use this for profiling
 # import cProfile
@@ -1006,3 +1007,12 @@ if printstats:
 
 
 
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 각 스레드 열은 그 시점에 실행한 어셈블리 명령을 보여 줍니다. ax/bx/cx/dx는 레지스터, 숫자로 된 메모리 열은 해당 주소의 값입니다.
+  - Interrupt는 인터럽트에 의한 전환, Halt는 스레드 종료입니다. 명령어와 레지스터 이름은 입력 소스와 대조할 수 있도록 그대로 표시합니다.
+  - 공유 변수 읽기 → 계산 → 쓰기 사이에 다른 스레드가 끼어드는지 보세요. 최종 값만 같다고 경쟁 상태가 없는 것은 아닙니다.
+  - 시뮬레이터 실행 속도 통계는 실행한 컴퓨터의 속도에 따라 달라집니다. 숙제의 가상 CPU 실행 시간과는 다른 값입니다.
+""")

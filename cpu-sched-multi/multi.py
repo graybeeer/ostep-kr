@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # each job has a working-set size
 # if it runs "in cache", it runs at rate X
@@ -149,14 +150,14 @@ class scheduler:
         for entry in job_list.split(','):
             tmp = entry.split(':')
             if len(tmp) != 3:
-                print('bad job description [%s]: needs triple of name:runtime:working_set_size' % entry)
+                print('잘못된 작업 [%s]: 이름:실행시간:작업집합크기 형식이어야 합니다' % entry)
                 exit(1)
             job_name, run_time, working_set_size = tmp[0], int(tmp[1]), int(tmp[2])
             self.jobs[job_name] = Job(name=job_name, run_time=run_time, working_set_size=working_set_size, affinity=[], time_left=[run_time])
-            print('Job name:%s run_time:%d working_set_size:%d' % (job_name, run_time, working_set_size))
+            print('작업 이름:%s 실행 시간:%d 작업 집합 크기:%d' % (job_name, run_time, working_set_size))
             # self.sched_queue.append(job_name)
             if job_name in self.job_name_list:
-                print('repeated job name %s' % job_name)
+                print('중복된 작업 이름 %s' % job_name)
                 exit(1)
             self.job_name_list.append(job_name)
         print('')
@@ -169,16 +170,16 @@ class scheduler:
                 # and cpu is an ID of a particular CPU (0 ... max_cpus-1)
                 tmp = entry.split(':')
                 if len(tmp) != 2:
-                    print('bad affinity spec %s' % affinity)
+                    print('잘못된 CPU 친화도 설정 %s' % affinity)
                     exit(1)
                 job_name = tmp[0]
                 if job_name not in self.job_name_list:
-                    print('job name %s in affinity list does not exist' % job_name)
+                    print('CPU 친화도 목록의 작업 %s이(가) 없습니다' % job_name)
                     exit(1)
                 for cpu in tmp[1].split('.'):
                     self.jobs[job_name].affinity.append(int(cpu))
                     if int(cpu) < 0 or int(cpu) >= num_cpus:
-                        print('bad cpu %d specified in affinity %s' % (int(cpu), affinity))
+                        print('CPU %d이(가) 친화도 %s에서 잘못 지정되었습니다' % (int(cpu), affinity))
                         exit(1)
 
         # now, assign jobs to either ALL the one queue, or to each of the queues in RR style
@@ -204,7 +205,7 @@ class scheduler:
                             break
 
             for cpu in range(num_cpus):
-                print('Scheduler CPU %d queue: %s' % (cpu, self.per_cpu_sched_queue[cpu]))
+                print('CPU %d의 스케줄링 큐: %s' % (cpu, self.per_cpu_sched_queue[cpu]))
             print('')
                             
         else:
@@ -215,7 +216,7 @@ class scheduler:
             for cpu in range(num_cpus):
                 self.per_cpu_sched_queue[cpu] = self.single_sched_queue
 
-            print('Scheduler central queue: %s\n' % (self.single_sched_queue))
+            print('중앙 스케줄링 큐: %s\n' % (self.single_sched_queue))
 
         self.num_jobs = len(self.job_name_list)
 
@@ -408,7 +409,7 @@ class scheduler:
                 cache_string += '%s' % self.caches[cpu].get_cache_state(job_name)
             if self.trace:
                 if self.trace_cache:
-                    print('cache[%s]' % cache_string, end='')
+                    print('캐시[%s]' % cache_string, end='')
                 print('     ', end='')
         return
 
@@ -443,10 +444,10 @@ class scheduler:
             self.system_time += 1
 
         if self.solve:
-            print('\nFinished time %d\n' % self.system_time)
-            print('Per-CPU stats')
+            print('\n전체 작업 완료 시각 %d\n' % self.system_time)
+            print('CPU별 통계')
             for cpu in range(self.num_cpus):
-                print('  CPU %d  utilization %3.2f [ warm %3.2f ]' % (cpu, 100.0 * float(self.stats_ran[cpu])/float(self.system_time),
+                print('  CPU %d  사용률 %3.2f [ 캐시가 준비된 실행 비율 %3.2f ]' % (cpu, 100.0 * float(self.stats_ran[cpu])/float(self.system_time),
                                                                       100.0 * float(self.stats_ran_warm[cpu])/float(self.system_time)))
             print('')
         return
@@ -455,48 +456,48 @@ class scheduler:
 # MAIN PROGRAM
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed',        default=0,     help='the random seed',                        action='store', type='int', dest='seed')
-parser.add_option('-j', '--job_num',     default=3,     help='number of jobs in the system',           action='store', type='int', dest='job_num')
-parser.add_option('-R', '--max_run',     default=100,   help='max run time of random-gen jobs',        action='store', type='int', dest='max_run')
-parser.add_option('-W', '--max_wset',    default=200,   help='max working set of random-gen jobs',     action='store', type='int', dest='max_wset')
-parser.add_option('-L', '--job_list',    default='',    help='provide a comma-separated list of job_name:run_time:working_set_size (e.g., a:10:100,b:10:50 means 2 jobs with run-times of 10, the first (a) with working set size=100, second (b) with working set size=50)', action='store', type='string', dest='job_list')
-parser.add_option('-p', '--per_cpu_queues', default=False, help='per-CPU scheduling queues (not one)', action='store_true',        dest='per_cpu_queues')
-parser.add_option('-A', '--affinity',    default='',    help='a list of jobs and which CPUs they can run on (e.g., a:0.1.2,b:0.1 allows job a to run on CPUs 0,1,2 but b only on CPUs 0 and 1', action='store', type='string', dest='affinity')
-parser.add_option('-n', '--num_cpus',    default=2,     help='number of CPUs',                         action='store', type='int', dest='num_cpus')
-parser.add_option('-q', '--quantum',     default=10,    help='length of time slice',                   action='store', type='int', dest='time_slice')
-parser.add_option('-P', '--peek_interval', default=30,  help='for per-cpu scheduling, how often to peek at other schedule queue; 0 turns this off', action='store', type='int', dest='peek_interval')
-parser.add_option('-w', '--warmup_time', default=10,    help='time it takes to warm cache',            action='store', type='int', dest='warmup_time')
-parser.add_option('-r', '--warm_rate', default=2,     help='how much faster to run with warm cache', action='store', type='int', dest='warm_rate')
-parser.add_option('-M', '--cache_size',  default=100,   help='cache size',                             action='store', type='int', dest='cache_size')
-parser.add_option('-o', '--rand_order',  default=False, help='has CPUs get jobs in random order',      action='store_true',        dest='random_order')
-parser.add_option('-t', '--trace',       default=False, help='enable basic tracing (show which jobs got scheduled)',      action='store_true',        dest='trace')
-parser.add_option('-T', '--trace_time_left', default=False, help='trace time left for each job',       action='store_true',        dest='trace_time_left')
-parser.add_option('-C', '--trace_cache', default=False, help='trace cache status (warm/cold) too',     action='store_true',        dest='trace_cache')
-parser.add_option('-S', '--trace_sched', default=False, help='trace scheduler state',                  action='store_true',        dest='trace_sched')
-parser.add_option('-c', '--compute',     default=False, help='compute answers for me',                 action='store_true',        dest='solve')
+parser.add_option('-s', '--seed',        default=0,     help='난수 시드 (같은 값으로 같은 문제 재현)',                        action='store', type='int', dest='seed')
+parser.add_option('-j', '--job_num',     default=3,     help='시스템의 작업 수',           action='store', type='int', dest='job_num')
+parser.add_option('-R', '--max_run',     default=100,   help='임의 생성 작업의 최대 실행 시간',        action='store', type='int', dest='max_run')
+parser.add_option('-W', '--max_wset',    default=200,   help='임의 생성 작업의 최대 작업 집합 크기',     action='store', type='int', dest='max_wset')
+parser.add_option('-L', '--job_list',    default='',    help='이름:실행시간:작업집합크기를 쉼표로 구분 (예: a:10:100,b:10:50은 실행 시간 각 10, 작업 집합 크기 각각 100과 50인 두 작업)', action='store', type='string', dest='job_list')
+parser.add_option('-p', '--per_cpu_queues', default=False, help='중앙 큐 대신 CPU별 스케줄링 큐 사용', action='store_true',        dest='per_cpu_queues')
+parser.add_option('-A', '--affinity',    default='',    help='작업별 실행 가능한 CPU 지정 (예: a:0.1.2,b:0.1은 a에 CPU 0,1,2 허용, b에 CPU 0,1 허용)', action='store', type='string', dest='affinity')
+parser.add_option('-n', '--num_cpus',    default=2,     help='CPU 개수',                         action='store', type='int', dest='num_cpus')
+parser.add_option('-q', '--quantum',     default=10,    help='타임 슬라이스 길이',                   action='store', type='int', dest='time_slice')
+parser.add_option('-P', '--peek_interval', default=30,  help='CPU별 큐 사용 시 다른 큐를 확인하는 주기 (0이면 비활성화)', action='store', type='int', dest='peek_interval')
+parser.add_option('-w', '--warmup_time', default=10,    help='캐시 준비에 필요한 실행 시간',            action='store', type='int', dest='warmup_time')
+parser.add_option('-r', '--warm_rate', default=2,     help='캐시가 준비되었을 때의 실행 속도 배율', action='store', type='int', dest='warm_rate')
+parser.add_option('-M', '--cache_size',  default=100,   help='캐시 크기',                             action='store', type='int', dest='cache_size')
+parser.add_option('-o', '--rand_order',  default=False, help='CPU가 작업을 가져가는 순서를 무작위로 결정',      action='store_true',        dest='random_order')
+parser.add_option('-t', '--trace',       default=False, help='기본 실행 흐름 표시 (CPU에 배정된 작업)',      action='store_true',        dest='trace')
+parser.add_option('-T', '--trace_time_left', default=False, help='작업별 남은 실행 시간 표시',       action='store_true',        dest='trace_time_left')
+parser.add_option('-C', '--trace_cache', default=False, help='캐시 준비 상태(warm/cold)도 표시',     action='store_true',        dest='trace_cache')
+parser.add_option('-S', '--trace_sched', default=False, help='스케줄링 큐 상태 표시',                  action='store_true',        dest='trace_sched')
+parser.add_option('-c', '--compute',     default=False, help='정답과 계산 결과 표시',                 action='store_true',        dest='solve')
 
 (options, args) = parser.parse_args()
 
 random_seed(options.seed)
 
-print('ARG seed %s' % options.seed)
-print('ARG job_num %s' % options.job_num)
-print('ARG max_run %s' % options.max_run)
-print('ARG max_wset %s' % options.max_wset)
-print('ARG job_list %s' % options.job_list)
-print('ARG affinity %s' % options.affinity)
-print('ARG per_cpu_queues %s' % options.per_cpu_queues)
-print('ARG num_cpus %s' % options.num_cpus)
-print('ARG quantum %s' % options.time_slice)
-print('ARG peek_interval %s' % options.peek_interval)
-print('ARG warmup_time %s' % options.warmup_time)
-print('ARG cache_size %s' % options.cache_size)
-print('ARG random_order %s' % options.random_order)
-print('ARG trace %s' % options.trace)
-print('ARG trace_time %s' % options.trace_time_left)
-print('ARG trace_cache %s' % options.trace_cache)
-print('ARG trace_sched %s' % options.trace_sched)
-print('ARG compute %s' % options.solve)
+print('설정 난수 시드 (seed) %s' % options.seed)
+print('설정 작업 수 (job_num) %s' % options.job_num)
+print('설정 최대 실행 시간 (max_run) %s' % options.max_run)
+print('설정 최대 작업 집합 크기 (max_wset) %s' % options.max_wset)
+print('설정 작업 목록 (job_list) %s' % options.job_list)
+print('설정 CPU 친화도 (affinity) %s' % options.affinity)
+print('설정 CPU별 큐 사용 (per_cpu_queues) %s' % options.per_cpu_queues)
+print('설정 CPU 수 (num_cpus) %s' % options.num_cpus)
+print('설정 타임 슬라이스 길이 (quantum) %s' % options.time_slice)
+print('설정 다른 큐 확인 주기 (peek_interval) %s' % options.peek_interval)
+print('설정 캐시 준비 시간 (warmup_time) %s' % options.warmup_time)
+print('설정 캐시 크기 (cache_size) %s' % options.cache_size)
+print('설정 CPU 순서 무작위화 (random_order) %s' % options.random_order)
+print('설정 실행 흐름 표시 (trace) %s' % options.trace)
+print('설정 남은 시간 표시 (trace_time) %s' % options.trace_time_left)
+print('설정 캐시 상태 표시 (trace_cache) %s' % options.trace_cache)
+print('설정 스케줄링 큐 표시 (trace_sched) %s' % options.trace_sched)
+print('설정 정답 표시 (compute) %s' % options.solve)
 print('')
 
 #
@@ -538,3 +539,11 @@ S = scheduler(job_list=job_list, affinity=options.affinity, per_cpu_queues=optio
 # Finally, ...
 S.run()
 
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 작업 집합(working set)은 작업이 반복해서 사용하는 데이터 크기입니다. 캐시에 들어가고 준비 시간이 지나면 더 빠르게 실행됩니다.
+  - 사용률은 전체 경과 시간 중 해당 CPU가 실행한 시간의 비율(%)입니다. warm도 전체 경과 시간을 분모로 한 캐시 준비 상태 실행 비율(%)입니다.
+  - 큐 간 부하 균형과 캐시 친화도는 서로 영향을 줍니다. 작업 이동으로 대기가 줄어도 캐시를 다시 준비하느라 손해를 볼 수 있습니다.
+""")

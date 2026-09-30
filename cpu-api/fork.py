@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # from this sort of thing
 # a forks b
@@ -111,7 +112,7 @@ class Forker:
             # chars = ('\u2502', '\u2500', '\u251c', '\u2514')
             chars = (u'\u2502', u'\u2500', u'\u251c', u'\u2514')
         else:
-            print('bad style %s' % self.print_style)
+            print('잘못된 출력 스타일 %s' % self.print_style)
             exit(1)
             
         # print stuff before node
@@ -170,7 +171,7 @@ class Forker:
     def do_exit(self, p):
         # remove the process from the process list
         if p == self.root_name:
-            print('root process: cannot exit')
+            print('루트 프로세스는 종료할 수 없습니다')
             exit(1)
         exit_parent = self.parents[p]
         self.process_list.remove(p)
@@ -198,7 +199,7 @@ class Forker:
         return '%s EXITS' % p
 
     def bad_action(self, action):
-        print('bad action (%s), must be X+Y or X- where X and Y are processes' % action)
+        print('잘못된 동작 (%s): X+Y 또는 X- 형식이어야 합니다 (X, Y: 프로세스 이름)' % action)
         exit(1)
         return
 
@@ -218,7 +219,7 @@ class Forker:
         return 
     
     def run(self):
-        print('                           Process Tree:')
+        print('                           프로세스 트리:')
         self.print_tree()
         print('')
 
@@ -270,34 +271,34 @@ class Forker:
             if self.show_tree:
                 # SHOW TREES (guess actions)
                 if self.solve:
-                    print('Action:', action)
+                    print('동작:', action)
                 else:
-                    print('Action?')
+                    print('동작은?')
                 # print('Process Tree:')
                 if not self.just_final:
                     self.print_tree()
             else:
                 # SHOW ACTIONS (guess tree)
-                print('Action:', action)
+                print('동작:', action)
                 if not self.just_final:
                     if self.solve:
                         # print('Process Tree:')
                         self.print_tree()
                     else:
-                        print('Process Tree?')
+                        print('프로세스 트리는?')
 
         if self.just_final:
             if self.show_tree:
-                print('\n                        Final Process Tree:')
+                print('\n                        최종 프로세스 트리:')
                 self.print_tree()
                 print('')
             else:
                 if self.solve:
-                    print('\n                        Final Process Tree:')
+                    print('\n                        최종 프로세스 트리:')
                     self.print_tree()
                     print('')
                 else:
-                    print('\n                        Final Process Tree?\n')
+                    print('\n                        최종 프로세스 트리는?\n')
             
         return
 
@@ -307,16 +308,16 @@ class Forker:
 #
 
 parser = OptionParser()
-parser.add_option('-s', '--seed', default=-1, help='the random seed', action='store', type='int', dest='seed')
-parser.add_option('-f', '--forks', default=0.7, help='percent of actions that are forks (not exits)', action='store', type='float', dest='fork_percentage')
-parser.add_option('-A', '--action_list', default='', help='action list, instead of randomly generated ones (format: a+b,b+c,b- means a fork b, b fork c, b exit)', action='store', type='string', dest='action_list')
-parser.add_option('-a', '--actions', default=5, help='number of forks/exits to do', action='store', type='int', dest='actions')
-parser.add_option('-t', '--show_tree', help='show tree (not actions)', action='store_true', default=False, dest='show_tree')
-parser.add_option('-P', '--print_style', help='tree print style (basic, line1, line2, fancy)', action='store', type='string', default='fancy', dest='print_style')
-parser.add_option('-F', '--final_only', help='just show final state', action='store_true', default=False, dest='just_final')
-parser.add_option('-L', '--leaf_only', help='only leaf processes exit', action='store_true', default=False, dest='leaf_only')
-parser.add_option('-R', '--local_reparent', help='reparent to local parent', action='store_true', default=False, dest='local_reparent')
-parser.add_option('-c', '--compute', help='compute answers for me', action='store_true', default=False, dest='solve')
+parser.add_option('-s', '--seed', default=-1, help='난수 시드 (같은 값으로 같은 문제 재현)', action='store', type='int', dest='seed')
+parser.add_option('-f', '--forks', default=0.7, help='전체 동작 중 fork(자식 생성)의 비율 (나머지는 종료)', action='store', type='float', dest='fork_percentage')
+parser.add_option('-A', '--action_list', default='', help='동작을 직접 지정 (a+b,b+c,b-: a가 b 생성, b가 c 생성, b 종료)', action='store', type='string', dest='action_list')
+parser.add_option('-a', '--actions', default=5, help='생성/종료 동작 수', action='store', type='int', dest='actions')
+parser.add_option('-t', '--show_tree', help='동작 대신 트리를 보여 주고 동작을 문제로 제시', action='store_true', default=False, dest='show_tree')
+parser.add_option('-P', '--print_style', help='트리 출력 스타일 (basic, line1, line2, fancy)', action='store', type='string', default='fancy', dest='print_style')
+parser.add_option('-F', '--final_only', help='마지막 상태만 표시', action='store_true', default=False, dest='just_final')
+parser.add_option('-L', '--leaf_only', help='자식 없는 말단 프로세스만 종료 허용', action='store_true', default=False, dest='leaf_only')
+parser.add_option('-R', '--local_reparent', help='고아 프로세스를 가까운 조상에게 재연결', action='store_true', default=False, dest='local_reparent')
+parser.add_option('-c', '--compute', help='정답과 계산 결과 표시', action='store_true', default=False, dest='solve')
 
 (options, args) = parser.parse_args()
 
@@ -324,23 +325,31 @@ if options.seed != -1:
     random_seed(options.seed)
 
 if options.fork_percentage <= 0.001:
-    print('fork_percentage must be > 0.001')
+    print('fork_percentage는 0.001보다 커야 합니다')
     exit(1)
 
 print('')
-print('ARG seed', options.seed)
-print('ARG fork_percentage', options.fork_percentage)
-print('ARG actions', options.actions)
-print('ARG action_list', options.action_list)
-print('ARG show_tree', options.show_tree)
-print('ARG just_final', options.just_final)
-print('ARG leaf_only', options.leaf_only)
-print('ARG local_reparent', options.local_reparent)
-print('ARG print_style', options.print_style)
-print('ARG solve', options.solve)
+print('설정 난수 시드 (seed)', options.seed)
+print('설정 프로세스 생성 비율 (fork_percentage)', options.fork_percentage)
+print('설정 동작 (actions)', options.actions)
+print('설정 동작 목록 (action_list)', options.action_list)
+print('설정 트리 표시 (show_tree)', options.show_tree)
+print('설정 최종 상태만 표시 (just_final)', options.just_final)
+print('설정 말단 프로세스만 종료 (leaf_only)', options.leaf_only)
+print('설정 가까운 조상에게 재연결 (local_reparent)', options.local_reparent)
+print('설정 트리 출력 스타일 (print_style)', options.print_style)
+print('설정 정답 표시 (solve)', options.solve)
 print('')
 
 f = Forker(options.fork_percentage, options.actions, options.action_list, options.show_tree, options.just_final, options.leaf_only, options.local_reparent, options.print_style, options.solve)
 f.run()
 
 
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 프로세스 트리: 들여쓰기는 부모-자식 관계입니다. X+Y는 X가 Y를 생성(fork), X-는 X의 종료입니다.
+  - 부모가 먼저 종료되면 살아 있는 자식의 부모가 바뀝니다. leaf_only와 local_reparent 설정에 따른 트리 차이를 보세요.
+  - forks는 자식 생성, EXITS는 종료, failed: has children은 자식이 남아 있어 종료할 수 없음을 뜻합니다.
+""")

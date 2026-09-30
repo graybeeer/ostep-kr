@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import sys
@@ -35,52 +36,52 @@ def Abort(str):
 #
 
 parser = OptionParser()
-parser.add_option('-s', '--seed', help='the random seed', 
+parser.add_option('-s', '--seed', help='난수 시드 (같은 값으로 같은 문제 재현)',
                   default=0, action='store', type='int', dest='seed')
 parser.add_option('-n', '--numQueues',
-                  help='number of queues in MLFQ (if not using -Q)', 
+                  help='MLFQ 큐 개수 (-Q를 사용하지 않을 때)',
                   default=3, action='store', type='int', dest='numQueues')
-parser.add_option('-q', '--quantum', help='length of time slice (if not using -Q)',
+parser.add_option('-q', '--quantum', help='타임 슬라이스 길이 (-Q를 사용하지 않을 때)',
                   default=10, action='store', type='int', dest='quantum')
-parser.add_option('-a', '--allotment', help='length of allotment (if not using -A)',
+parser.add_option('-a', '--allotment', help='우선순위별 허용 타임 슬라이스 수 (-A를 사용하지 않을 때)',
                   default=1, action='store', type='int', dest='allotment')
 parser.add_option('-Q', '--quantumList',
-                  help='length of time slice per queue level, specified as ' + \
-                  'x,y,z,... where x is the quantum length for the highest ' + \
-                  'priority queue, y the next highest, and so forth', 
+                  help='큐별 타임 슬라이스 길이: ' + \
+                  'x,y,z,... (x는 최고 우선순위 큐의 길이, ' + \
+                  'y는 그다음 큐의 값, 이하 같은 순서)',
                   default='', action='store', type='string', dest='quantumList')
 parser.add_option('-A', '--allotmentList',
-                  help='length of time allotment per queue level, specified as ' + \
-                  'x,y,z,... where x is the # of time slices for the highest ' + \
-                  'priority queue, y the next highest, and so forth', 
+                  help='큐별 허용 타임 슬라이스 수: ' + \
+                  'x,y,z,... (x는 최고 우선순위 큐의 허용 횟수, ' + \
+                  'y는 그다음 큐의 값, 이하 같은 순서)',
                   default='', action='store', type='string', dest='allotmentList')
-parser.add_option('-j', '--numJobs', default=3, help='number of jobs in the system',
+parser.add_option('-j', '--numJobs', default=3, help='시스템의 작업 수',
                   action='store', type='int', dest='numJobs')
-parser.add_option('-m', '--maxlen', default=100, help='max run-time of a job ' +
-                  '(if randomly generating)', action='store', type='int',
+parser.add_option('-m', '--maxlen', default=100, help='작업의 최대 실행 시간 ' +
+                  '(임의 생성 시)', action='store', type='int',
                   dest='maxlen')
 parser.add_option('-M', '--maxio', default=10,
-                  help='max I/O frequency of a job (if randomly generating)',
+                  help='임의 생성 작업의 최대 I/O 요청 간격',
                   action='store', type='int', dest='maxio')
 parser.add_option('-B', '--boost', default=0,
-                  help='how often to boost the priority of all jobs back to ' +
-                  'high priority', action='store', type='int', dest='boost')
+                  help='모든 작업의 우선순위를 올리는 주기: ' +
+                  '최고 우선순위로 복귀', action='store', type='int', dest='boost')
 parser.add_option('-i', '--iotime', default=5,
-                  help='how long an I/O should last (fixed constant)',
+                  help='I/O 하나에 걸리는 고정 시간',
                   action='store', type='int', dest='ioTime')
 parser.add_option('-S', '--stay', default=False,
-                  help='reset and stay at same priority level when issuing I/O',
+                  help='I/O 요청 시 할당량을 초기화하고 현재 우선순위 유지',
                   action='store_true', dest='stay')
 parser.add_option('-I', '--iobump', default=False,
-                  help='if specified, jobs that finished I/O move immediately ' + \
-                  'to front of current queue',
+                  help='I/O 완료 작업을 즉시 이동: ' + \
+                  '현재 큐의 맨 앞에 배치',
                   action='store_true', dest='iobump')
 parser.add_option('-l', '--jlist', default='',
-                  help='a comma-separated list of jobs to run, in the form ' + \
-                  'x1,y1,z1:x2,y2,z2:... where x is start time, y is run ' + \
-                  'time, and z is how often the job issues an I/O request',
+                  help='작업 목록 형식: ' + \
+                  'x1,y1,z1:x2,y2,z2:... (x는 도착 시각, y는 CPU 실행 ' + \
+                  '시간, z는 I/O 요청 간격)',
                   action='store', type='string', dest='jlist')
-parser.add_option('-c', help='compute answers for me', action='store_true',
+parser.add_option('-c', help='정답과 계산 결과 표시', action='store_true',
                   default=False, dest='solve')
 
 (options, args) = parser.parse_args()
@@ -107,13 +108,13 @@ allotment = {}
 if options.allotmentList != '':
     allotmentLengths = options.allotmentList.split(',')
     if numQueues != len(allotmentLengths):
-        print('number of allotments specified must match number of quantums')
+        print('할당량 개수와 타임 슬라이스 개수가 같아야 합니다')
         exit(1)
     qc = numQueues - 1
     for i in range(numQueues):
         allotment[qc] = int(allotmentLengths[i])
         if qc != 0 and allotment[qc] <= 0:
-            print('allotment must be positive integer')
+            print('할당량은 양의 정수여야 합니다')
             exit(1)
         qc -= 1
 else:
@@ -142,8 +143,8 @@ if options.jlist != '':
     for j in allJobs:
         jobInfo = j.split(',')
         if len(jobInfo) != 3:
-            print('Badly formatted job string. Should be x1,y1,z1:x2,y2,z2:...')
-            print('where x is the startTime, y is the runTime, and z is the I/O frequency.')
+            print('작업 형식 오류: x1,y1,z1:x2,y2,z2:... 형식을 사용하세요')
+            print('x는 도착 시각, y는 CPU 실행 시간, z는 I/O 요청 간격입니다.')
             exit(1)
         assert(len(jobInfo) == 3)
         startTime = int(jobInfo[0])
@@ -176,35 +177,43 @@ else:
 
 numJobs = len(job)
 
-print('Here is the list of inputs:')
-print('OPTIONS jobs',            numJobs)
-print('OPTIONS queues',          numQueues)
+print('입력 설정:')
+print('설정 작업 수 (jobs)',            numJobs)
+print('설정 큐 수 (queues)',          numQueues)
 for i in range(len(quantum)-1,-1,-1):
-    print('OPTIONS allotments for queue %2d is %3d' % (i, allotment[i]))
-    print('OPTIONS quantum length for queue %2d is %3d' % (i, quantum[i]))
-print('OPTIONS boost',           options.boost)
-print('OPTIONS ioTime',          options.ioTime)
-print('OPTIONS stayAfterIO',     options.stay)
-print('OPTIONS iobump',          options.iobump)
+    print('설정: 큐 %2d의 허용 타임 슬라이스 수 %3d' % (i, allotment[i]))
+    print('설정: 큐 %2d의 타임 슬라이스 길이 %3d' % (i, quantum[i]))
+print('설정 우선순위 상향 주기 (boost)',           options.boost)
+print('설정 I/O 소요 시간 (ioTime)',          options.ioTime)
+print('설정 I/O 후 우선순위 유지 (stayAfterIO)',     options.stay)
+print('설정 I/O 완료 후 큐 맨 앞으로 이동 (iobump)',          options.iobump)
 
 print('\n')
-print('For each job, three defining characteristics are given:')
-print('  startTime : at what time does the job enter the system')
-print('  runTime   : the total CPU time needed by the job to finish')
-print('  ioFreq    : every ioFreq time units, the job issues an I/O')
-print('              (the I/O takes ioTime units to complete)\n')
+print('각 작업에는 다음 세 가지 값이 주어집니다:')
+print('  도착 시각(startTime): 작업이 시스템에 들어오는 시각')
+print('  실행 시간(runTime): 완료까지 필요한 CPU 시간의 합')
+print('  I/O 간격(ioFreq): 이만큼 CPU를 사용하면 I/O 요청')
+print('              (각 I/O는 ioTime만큼 걸립니다)\n')
 
-print('Job List:')
+print('작업 목록:')
 for i in range(numJobs):
-    print('  Job %2d: startTime %3d - runTime %3d - ioFreq %3d' % (i, job[i]['startTime'], job[i]['runTime'], job[i]['ioFreq']))
+    print('  작업 %2d: 도착 시각 %3d - 실행 시간 %3d - I/O 간격 %3d' % (i, job[i]['startTime'], job[i]['runTime'], job[i]['ioFreq']))
 print('')
 
+print("""
+[각주: 출력 읽는 법]
+  - 큐 번호가 클수록 우선순위가 높습니다. 남은 퀀텀(TICKS)은 현재 타임 슬라이스의 남은 시간입니다.
+  - 할당량(ALLOT)은 현재 우선순위에서 쓸 수 있는 남은 타임 슬라이스 수입니다. 남은 실행(TIME)은 작업이 더 사용해야 하는 CPU 시간입니다.
+  - JOB BEGINS는 작업 도착, IO_DONE은 I/O 완료입니다. 별도 시각 없이 나오는 I/O 완료 예약 문구는 미래 완료 이벤트를 등록했다는 뜻입니다.
+  - 응답 시간은 첫 실행 시각 - 도착 시각, 반환 시간은 완료 시각 - 도착 시각입니다. I/O 대기와 우선순위 상향이 이 값에 미치는 영향을 보세요.
+""")
+
 if options.solve == False:
-    print('Compute the execution trace for the given workloads.')
-    print('If you would like, also compute the response and turnaround')
-    print('times for each of the jobs.')
+    print('주어진 작업들의 실행 흐름을 계산하세요.')
+    print('각 작업의 응답 시간과 반환 시간도')
+    print('함께 계산해 보세요.')
     print('')
-    print('Use the -c flag to get the exact results when you are finished.\n')
+    print('계산 후 -c 옵션으로 정답을 확인하세요.\n')
     exit(0)
 
 # initialize the MLFQ queues
@@ -219,7 +228,7 @@ currTime = 0
 totalJobs    = len(job)
 finishedJobs = 0
 
-print('\nExecution Trace:\n')
+print('\n실행 흐름:\n')
 
 while finishedJobs < totalJobs:
     # find highest priority job
@@ -230,7 +239,7 @@ while finishedJobs < totalJobs:
     # check for priority boost
     if options.boost > 0 and currTime != 0:
         if currTime % options.boost == 0:
-            print('[ time %d ] BOOST ( every %d )' % (currTime, options.boost))
+            print('[ 시각 %d ] 우선순위 상향 ( 주기 %d )' % (currTime, options.boost))
             # remove all jobs from queues (except high queue) and put them in high queue
             for q in range(numQueues-1):
                 for j in queue[q]:
@@ -256,7 +265,7 @@ while finishedJobs < totalJobs:
         for (j, type) in ioDone[currTime]:
             q = job[j]['currPri']
             job[j]['doingIO'] = False
-            print('[ time %d ] %s by JOB %d' % (currTime, type, j))
+            print('[ 시각 %d ] %s, 작업 %d' % (currTime, type, j))
             if options.iobump == False or type == 'JOB BEGINS':
                 queue[q].append(j)
             else:
@@ -265,14 +274,14 @@ while finishedJobs < totalJobs:
     # now find the highest priority job
     currQueue = FindQueue()
     if currQueue == -1:
-        print('[ time %d ] IDLE' % (currTime))
+        print('[ 시각 %d ] 유휴 (실행할 작업 없음)' % (currTime))
         currTime += 1
         continue
             
     # there was at least one runnable job, and hence ...
     currJob = queue[currQueue][0]
     if job[currJob]['currPri'] != currQueue:
-        Abort('currPri[%d] does not match currQueue[%d]' % (job[currJob]['currPri'], currQueue))
+        Abort('현재 우선순위[%d]와 현재 큐[%d]가 일치하지 않습니다' % (job[currJob]['currPri'], currQueue))
 
     job[currJob]['timeLeft']  -= 1
     job[currJob]['ticksLeft'] -= 1
@@ -286,11 +295,11 @@ while finishedJobs < totalJobs:
     allotLeft = job[currJob]['allotLeft']
     timeLeft  = job[currJob]['timeLeft']
 
-    print('[ time %d ] Run JOB %d at PRIORITY %d [ TICKS %d ALLOT %d TIME %d (of %d) ]' % \
+    print('[ 시각 %d ] 작업 %d 실행, 우선순위 %d [ 남은 퀀텀 %d 할당량 %d 남은 실행 %d (전체 %d) ]' % \
           (currTime, currJob, currQueue, ticksLeft, allotLeft, timeLeft, runTime))
 
     if timeLeft < 0:
-        Abort('Error: should never have less than 0 time left to run')
+        Abort('오류: 남은 실행 시간은 0보다 작을 수 없습니다')
 
 
     # UPDATE TIME
@@ -298,7 +307,7 @@ while finishedJobs < totalJobs:
 
     # CHECK FOR JOB ENDING
     if timeLeft == 0:
-        print('[ time %d ] FINISHED JOB %d' % (currTime, currJob))
+        print('[ 시각 %d ] 작업 %d 완료' % (currTime, currJob))
         finishedJobs += 1
         job[currJob]['endTime'] = currTime
         # print('BEFORE POP', queue)
@@ -311,7 +320,7 @@ while finishedJobs < totalJobs:
     issuedIO = False
     if ioFreq > 0 and (((runTime - timeLeft) % ioFreq) == 0):
         # time for an IO!
-        print('[ time %d ] IO_START by JOB %d' % (currTime, currJob))
+        print('[ 시각 %d ] 작업 %d의 I/O 시작' % (currTime, currJob))
         issuedIO = True
         desched = queue[currQueue].pop(0)
         assert(desched == currJob)
@@ -324,7 +333,7 @@ while finishedJobs < totalJobs:
         futureTime = currTime + ioTime
         if futureTime not in ioDone:
             ioDone[futureTime] = []
-        print('IO DONE')
+        print('I/O 완료 예약')
         ioDone[futureTime].append((currJob, 'IO_DONE'))
         
     # CHECK FOR QUANTUM ENDING AT THIS LEVEL (BUT REMEMBER, THERE STILL MAY BE ALLOTMENT LEFT)
@@ -361,15 +370,15 @@ while finishedJobs < totalJobs:
 
 # print out statistics
 print('')
-print('Final statistics:')
+print('최종 통계:')
 responseSum   = 0
 turnaroundSum = 0
 for i in range(numJobs):
     response   = job[i]['firstRun'] - job[i]['startTime']
     turnaround = job[i]['endTime'] - job[i]['startTime']
-    print('  Job %2d: startTime %3d - response %3d - turnaround %3d' % (i, job[i]['startTime'], response, turnaround))
+    print('  작업 %2d: 도착 시각 %3d - 응답 시간 %3d - 반환 시간 %3d' % (i, job[i]['startTime'], response, turnaround))
     responseSum   += response
     turnaroundSum += turnaround
 
-print('\n  Avg %2d: startTime n/a - response %.2f - turnaround %.2f' % (i, float(responseSum)/numJobs, float(turnaroundSum)/numJobs))
+print('\n  평균 (%2d개): 도착 시각 해당 없음 - 응답 시간 %.2f - 반환 시간 %.2f' % (i, float(responseSum)/numJobs, float(turnaroundSum)/numJobs))
 print('\n')

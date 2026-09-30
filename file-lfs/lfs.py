@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #
 # lfs.py
@@ -221,7 +222,7 @@ class LFS:
             # print LIVENESS
             if show_liveness or self.solve:
                 if self.live[i]:
-                    print(' live', end=' ')
+                    print('유효', end=' ')
                 else:
                     print('     ', end=' ')
             else:
@@ -229,7 +230,7 @@ class LFS:
 
             
             if block_type == BLOCK_TYPE_CHECKPOINT:
-                print('checkpoint:', end=' ')
+                print('체크포인트:', end=' ')
                 for e in b['entries']:
                     if e != -1:
                         print(e,  end=' ')
@@ -246,7 +247,7 @@ class LFS:
             elif block_type == BLOCK_TYPE_DATA_BLOCK:
                 print (b['contents'])
             elif block_type == BLOCK_TYPE_INODE:
-                print('type:'+b['type'], 'size:'+str(b['size']), 'refs:'+str(b['refs']), 'ptrs:',  end=' ')
+                print('유형:'+b['type'], '크기:'+str(b['size']), '참조 수:'+str(b['refs']), '포인터:',  end=' ')
                 for p in b['pointers']:
                     if p != -1:
                         print('%s' % p, end=' ')
@@ -254,7 +255,7 @@ class LFS:
                         print('--', end=' ')
                 print('')
             elif block_type == BLOCK_TYPE_IMAP:
-                print('chunk(imap):', end=' ')
+                print('아이노드 맵 조각(imap):', end=' ')
                 for e in b['entries']:
                     if e != -1:
                         print(e, end=' ')
@@ -262,7 +263,7 @@ class LFS:
                         print('--', end=' ')
                 print('')
             else:
-                print('error: unknown block_type', block_type)
+                print('오류: 알 수 없는 블록 유형', block_type)
                 exit(1)
         return
 
@@ -687,11 +688,11 @@ def process_percentages(percentages):
         cmd = p[0]
         value = int(p[1:])
         if value < 0:
-            print('percentages must be positive or zero')
+            print('각 비율은 0 이상이어야 합니다')
             exit(1)
         csum += int(value)
     if csum != 100:
-        print('percentages do not add to 100')
+        print('비율의 합이 100이 아닙니다')
         exit(1)
 
     p_array = {}
@@ -705,7 +706,7 @@ def process_percentages(percentages):
     for p in tmp:
         cmd = p[0]
         if cmd not in cmd_list:
-            print('bad command', cmd)
+            print('잘못된 명령', cmd)
             exit(1)
         value = int(p[1:])
         p_array[cmd] = (csum, csum + value)
@@ -763,7 +764,7 @@ def make_command_list(num_commands, percent):
         elif chances >= percents['s'][0] and chances < percents['s'][1]:
             command = 's'
         else:
-            print('abort: internal error with percent operations')
+            print('중단: 동작 비율 처리 중 내부 오류')
             exit(1)
 
         if command_list == '':
@@ -778,19 +779,19 @@ def make_command_list(num_commands, percent):
 # MAIN program
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed', default=0, help='the random seed', action='store', type='int', dest='seed')
-parser.add_option('-N', '--no_force', help='Do not force checkpoint writes after updates', default=False, action='store_true', dest='no_force_checkpoints')
-parser.add_option('-F', '--no_final', help='Do not show the final state of the file system', default=False, action='store_true', dest='no_final')
-parser.add_option('-D', '--use_disk_cr', help='use disk (maybe old) version of checkpoint region', default=False, action='store_true', dest='use_disk_cr')
-parser.add_option('-c', '--compute', help='compute answers for me', action='store_true', default=False, dest='solve')
-parser.add_option('-o', '--show_operations', help='print out operations as they occur', action='store_true', default=False, dest='show_operations')
-parser.add_option('-i', '--show_intermediate', help='print out state changes as they occur', action='store_true', default=False, dest='show_intermediate')
-parser.add_option('-e', '--show_return_codes', help='show error/return codes', action='store_true', default=False, dest='show_return_codes')
-parser.add_option('-v', '--show_live_paths', help='show live paths', action='store_true', default=False, dest='show_live_paths')
-parser.add_option('-n', '--num_commands', help='generate N random commands', action='store', default=3, dest='num_commands')
-parser.add_option('-p', '--percentages', help='percent chance of: createfile,writefile,createdir,rmfile,linkfile,sync (example is c30,w30,d10,r20,l10,s0)', action='store', default='c30,w30,d10,r20,l10,s0', dest='percentages')
-parser.add_option('-a', '--allocation_policy', help='inode allocation policy: "r" for "random" or "s" for "sequential"', action='store', default='s', dest='inode_policy')
-parser.add_option('-L', '--command_list', default = '', action='store', type='str', dest='command_list', help='command list in format: "cmd1,arg1,...,argN:cmd2,arg1,...,argN:... where cmds are: c:createfile, d:createdir, r:delete, w:write, l:link, s:sync format: c,filepath d,dirpath r,filepath w,filepath,offset,numblks l,srcpath,dstpath s')
+parser.add_option('-s', '--seed', default=0, help='난수 시드 (같은 값으로 같은 문제 재현)', action='store', type='int', dest='seed')
+parser.add_option('-N', '--no_force', help='갱신할 때마다 체크포인트를 강제로 저장하지 않음', default=False, action='store_true', dest='no_force_checkpoints')
+parser.add_option('-F', '--no_final', help='파일 시스템의 마지막 상태를 표시하지 않음', default=False, action='store_true', dest='no_final')
+parser.add_option('-D', '--use_disk_cr', help='디스크에 저장된 체크포인트 사용 (이전 상태일 수 있음)', default=False, action='store_true', dest='use_disk_cr')
+parser.add_option('-c', '--compute', help='정답과 계산 결과 표시', action='store_true', default=False, dest='solve')
+parser.add_option('-o', '--show_operations', help='수행되는 동작 표시', action='store_true', default=False, dest='show_operations')
+parser.add_option('-i', '--show_intermediate', help='동작 후 상태 변화 표시', action='store_true', default=False, dest='show_intermediate')
+parser.add_option('-e', '--show_return_codes', help='오류/반환 코드 표시', action='store_true', default=False, dest='show_return_codes')
+parser.add_option('-v', '--show_live_paths', help='현재 유효한 경로 표시', action='store_true', default=False, dest='show_live_paths')
+parser.add_option('-n', '--num_commands', help='무작위 명령 N개 생성', action='store', default=3, dest='num_commands')
+parser.add_option('-p', '--percentages', help='파일 생성/쓰기/디렉터리 생성/삭제/링크/동기화 비율 (예: c30,w30,d10,r20,l10,s0)', action='store', default='c30,w30,d10,r20,l10,s0', dest='percentages')
+parser.add_option('-a', '--allocation_policy', help='아이노드 할당 정책: r (무작위), s (순차)', action='store', default='s', dest='inode_policy')
+parser.add_option('-L', '--command_list', default = '', action='store', type='str', dest='command_list', help='콜론으로 구분한 명령 목록. 형식: c,파일경로(생성) d,디렉터리경로(생성) r,파일경로(삭제) w,파일경로,오프셋,블록수(쓰기) l,원본경로,새경로(링크) s(동기화)')
 
 (options, args) = parser.parse_args()
 
@@ -805,7 +806,7 @@ if options.inode_policy == 's':
 elif options.inode_policy == 'r':
     inode_policy = ALLOCATE_RANDOM
 else:
-    print('bad policy', options.inode_policy)
+    print('잘못된 정책', options.inode_policy)
     exit(1)
 
 # where most of the work is done
@@ -821,13 +822,13 @@ print_intermediate = options.show_intermediate
 # generate some random commands
 if command_list == '':
     if num_commands < 0:
-        print('num_commands must be greater than zero', num_commands)
+        print('명령 수는 0보다 커야 합니다', num_commands)
         exit(1)
     command_list = make_command_list(num_commands, percents)
     
 
 print('')
-print('INITIAL file system contents:')
+print('초기 파일 시스템 내용:')
 L.dump(True)
 L.dump_last = 4 # ugly ... but needed to make intermediate dumps correct
 print('')
@@ -845,48 +846,48 @@ if command_list != '':
         if command_and_args[0] == 'c':
             assert(len(command_and_args) == 2)
             if print_operation:
-                print('create file', command_and_args[1], end=' ')
+                print('파일 생성', command_and_args[1], end=' ')
             rc = L.file_create(command_and_args[1])
             if rc == 0:
                 files_that_exist.append(command_and_args[1])
         elif command_and_args[0] == 'd':
             assert(len(command_and_args) == 2)
             if print_operation:
-                print('create dir ', command_and_args[1], end=' ')
+                print('디렉터리 생성 ', command_and_args[1], end=' ')
             rc = L.dir_create(command_and_args[1])
             if rc == 0:
                 dirs_that_exist.append(command_and_args[1])
         elif command_and_args[0] == 'r':
             assert(len(command_and_args) == 2)
             if print_operation:
-                print('delete file', command_and_args[1], end=' ')
+                print('파일 삭제', command_and_args[1], end=' ')
             rc = L.file_delete(command_and_args[1])
             if rc == 0:
                 if command_and_args[1] in files_that_exist:
                     files_that_exist.remove(command_and_args[1])
                 else:
-                    print('warning: cannot find file', command_and_args[1])
+                    print('경고: 파일을 찾을 수 없습니다', command_and_args[1])
         elif command_and_args[0] == 'l':
             assert(len(command_and_args) == 3)
             if print_operation:
-                print('link file  ', command_and_args[1], command_and_args[2], end=' ')
+                print('파일 링크  ', command_and_args[1], command_and_args[2], end=' ')
             rc = L.file_link(command_and_args[1], command_and_args[2])
             if rc == 0:
                 files_that_exist.append(command_and_args[2])
         elif command_and_args[0] == 'w':
             assert(len(command_and_args) == 4)
             if print_operation:
-                print('write file  %s offset=%d size=%d' % (command_and_args[1], int(command_and_args[2]), int(command_and_args[3])), end=' ')
+                print('파일 쓰기  %s 오프셋=%d 크기=%d' % (command_and_args[1], int(command_and_args[2]), int(command_and_args[3])), end=' ')
             rc = L.file_write(command_and_args[1], int(command_and_args[2]), int(command_and_args[3]))
         elif command_and_args[0] == 's':
             if print_operation:
-                print('sync', end=' ')
+                print('동기화', end=' ')
             rc = L.sync()
         else:
-            print('command not understood so skipping [%s]' % command_and_args[0])
+            print('알 수 없는 명령이므로 건너뜁니다 [%s]' % command_and_args[0])
 
         if not print_operation:
-            print('command?', end=' ')
+            print('수행된 명령은?', end=' ')
 
         if print_intermediate:
             print('')
@@ -910,12 +911,21 @@ if command_list != '':
 
 if not options.no_final:
     print('')
-    print('FINAL file system contents:')
+    print('최종 파일 시스템 내용:')
     L.dump(False)
     print('')
     if options.show_live_paths:
-        print('Live directories: ', dirs_that_exist)
-        print('Live files: ', files_that_exist)
+        print('유효한 디렉터리: ', dirs_that_exist)
+        print('유효한 파일: ', files_that_exist)
         print('')
 else:
     print('')
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 로그 구조 파일 시스템은 갱신된 블록을 뒤에 추가합니다. 이전 블록이 남아 있어도 최신 경로에서 참조되지 않으면 유효하지 않습니다.
+  - 체크포인트는 아이노드 맵(imap)을 찾는 출발점, imap은 아이노드 번호와 최신 아이노드 블록을 연결하는 표입니다.
+  - 유형의 reg는 일반 파일, dir는 디렉터리입니다. 크기·참조 수·포인터를 따라 최신 데이터에 도달하는지 보세요.
+  - sync는 체크포인트를 디스크에 반영합니다. 디스크의 이전 체크포인트를 사용하면 최신 갱신이 보이지 않을 수 있습니다.
+""")

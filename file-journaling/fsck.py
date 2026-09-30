@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import random
@@ -252,8 +253,8 @@ class fs:
         self.nameToInum = {'/':self.ROOT}
 
     def dump(self):
-        print('inode bitmap', self.ibitmap.dump())
-        print('inodes       ', end='')
+        print('아이노드 비트맵', self.ibitmap.dump())
+        print('아이노드        ', end='')
         for i in range(0,self.numInodes):
             ftype = self.inodes[i].getType()
             if ftype == 'free':
@@ -261,8 +262,8 @@ class fs:
             else:
                 print('[%s a:%s r:%d]' % (ftype, self.inodes[i].getAddr(), self.inodes[i].getRefCnt()), end=' ')
         print('')
-        print('data bitmap ', self.dbitmap.dump())
-        print('data         ', end='')
+        print('데이터 비트맵  ', self.dbitmap.dump())
+        print('데이터          ', end='')
         for i in range(self.numData):
             print(self.data[i].dump(), end=' ')
         print('')
@@ -530,19 +531,19 @@ class fs:
             num = whichCorrupt
 
         if self.solve:
-            print('CORRUPTION::', end='')
+            print('손상 내용::', end='')
 
         if num == 0:
             # data bitmap
             badBit = random_randint(0, self.numData-1)
             if self.solve:
-                print('DATA BITMAP corrupt bit %d' % badBit)
+                print('데이터 비트맵의 %d번 비트 손상' % badBit)
             self.dbitmap.corrupt(badBit)
         elif num == 1:
             # inode bitmap
             badBit = random_randint(0, self.numInodes-1)
             if self.solve:
-                print('INODE BITMAP corrupt bit %d' % badBit)
+                print('아이노드 비트맵의 %d번 비트 손상' % badBit)
             self.ibitmap.corrupt(badBit)
         elif num == 2 or num == 8:
             # corrupt live file inode refcnt
@@ -552,17 +553,17 @@ class fs:
                 badInode = self.pickRandom('d')
             if random_randint(0, 1) == 0:
                 if self.solve:
-                    print('INODE %d refcnt increased' % badInode)
+                    print('아이노드 %d의 참조 수 증가' % badInode)
                 self.inodes[badInode].incRefCnt()
             else:
                 if self.solve:
-                    print('INODE %d refcnt decreased' % badInode)
+                    print('아이노드 %d의 참조 수 감소' % badInode)
                 self.inodes[badInode].decRefCnt()
         elif num == 3 or num == 9:
             # create new fake inode
             badInode = self.pickRandom('free')
             if self.solve:
-                print('INODE %d orphan' % badInode)
+                print('아이노드 %d이(가) 고아 상태가 됨' % badInode)
             if num == 3:
                 self.inodes[badInode].setAll('f', -1, 1)
             else:
@@ -575,7 +576,7 @@ class fs:
                 badInode = self.pickRandom('d')
             badData = self.findFreeData()
             if self.solve:
-                print('INODE %d points to dead block %d' % (badInode, badData))
+                print('아이노드 %d이(가) 사용되지 않는 블록 %d을(를) 가리킴' % (badInode, badData))
             self.inodes[badInode].setAddr(badData)
         elif num == 5 or num == 11:
             # normal inode gets its type switched
@@ -584,7 +585,7 @@ class fs:
             else:
                 badInode = self.pickRandom('d')
             if self.solve:
-                print('INODE %d was type file, now dir' % badInode)
+                print('아이노드 %d의 유형이 파일에서 디렉터리로 바뀜' % badInode)
             if num == 5:
                 self.inodes[badInode].setType('d')
             else:
@@ -599,7 +600,7 @@ class fs:
             badEntry = dirList[badIndex]
             badInodeNum = self.ibitmap.findFree()
             if self.solve:
-                print('INODE %d with directory %s:\n  entry (\'%s\', %d) altered to refer to unallocated inode (%d)' % (badInode, dirList, badEntry[0], badEntry[1], badInodeNum))
+                print("아이노드 %d, 디렉터리 %s:\n  항목 ('%s', %d)이(가) 미할당 아이노드 (%d)을(를) 가리키도록 손상됨" % (badInode, dirList, badEntry[0], badEntry[1], badInodeNum))
             self.data[addr].setDirEntry(badIndex, (badEntry[0], badInodeNum))
         elif num == 7:
             # corrupt a directory block by making one tuple refer to a DIFFERENT NAME
@@ -611,10 +612,10 @@ class fs:
             badEntry = dirList[badIndex]
             badName = self.makeName()
             if self.solve:
-                print('INODE %d with directory %s:\n  entry (\'%s\', %d) altered to refer to different name (%s)' % (badInode, dirList, badEntry[0], badEntry[1], badName))
+                print("아이노드 %d, 디렉터리 %s:\n  항목 ('%s', %d)의 이름이 다른 이름 (%s)으로 바뀜" % (badInode, dirList, badEntry[0], badEntry[1], badName))
             self.data[addr].setDirEntry(badIndex, (badName, badEntry[1]))
         else:
-            print('No such corruption (%d)' % whichCorrupt)
+            print('해당 손상 유형이 없습니다 (%d)' % whichCorrupt)
             exit(1)
         return
 
@@ -645,15 +646,15 @@ class fs:
                         rc = self.doCreate('d')
                         dprint('doCreate(d) rc:%d' % rc)
                 if self.ibitmap.numFree() == 0:
-                    print('File system out of inodes; rerun with more via command-line flag?')
+                    print('아이노드가 부족합니다. 실행 옵션으로 아이노드 수를 늘려 보세요.')
                     exit(1)
                 if self.dbitmap.numFree() == 0:
-                    print('File system out of data blocks; rerun with more via command-line flag?')
+                    print('데이터 블록이 부족합니다. 실행 옵션으로 블록 수를 늘려 보세요.')
                     exit(1)
 
 
         if self.solve:
-            print('Initial state of file system:\n')
+            print('파일 시스템의 초기 상태:\n')
             self.dump()
             print('')
 
@@ -662,19 +663,19 @@ class fs:
 
         if self.solve:
             print('')
-        print('Final state of file system:\n')
+        print('파일 시스템의 최종 상태:\n')
         self.dump()
         print('')
 
         if not self.solve and not dontCorrupt:
-            print('Can you figure out how the file system was corrupted?\n')
+            print('파일 시스템의 어느 부분이 어떻게 손상되었는지 찾아보세요.\n')
         if not self.solve and dontCorrupt:
-            print('Can you figure out which files and directories exist?\n')
+            print('어떤 파일과 디렉터리가 존재하는지 찾아보세요.\n')
 
         if printFinal:
-            print('\nSummary of files, directories::')
-            print('  Files:      ', self.files)
-            print('  Directories:', self.dirs)
+            print('\n파일 및 디렉터리 요약::')
+            print('  파일:       ', self.files)
+            print('  디렉터리:', self.dirs)
             print('')
 
 #
@@ -682,26 +683,26 @@ class fs:
 #
 parser = OptionParser()
 
-parser.add_option('-s', '--seed',        default=0,     help='first random seed (for a filesystem)', action='store', type='int', dest='seed')
-parser.add_option('-S', '--seedCorrupt', default=0,     help='second random seed (for corruptions)', action='store', type='int', dest='seedCorrupt')
-parser.add_option('-i', '--numInodes',   default=16,    help='number of inodes in file system',      action='store', type='int', dest='numInodes') 
-parser.add_option('-d', '--numData',     default=16,    help='number of data blocks in file system', action='store', type='int', dest='numData') 
-parser.add_option('-n', '--numRequests', default=15,    help='number of requests to simulate',       action='store', type='int', dest='numRequests')
-parser.add_option('-p', '--printFinal',  default=False, help='print the final set of files/dirs',    action='store_true',        dest='printFinal')
-parser.add_option('-w', '--whichCorrupt',default=-1,    help='do a specific corruption',             action='store', type='int', dest='whichCorrupt')
-parser.add_option('-c', '--compute',     default=False, help='compute answers for me',               action='store_true',        dest='solve')
-parser.add_option('-D', '--dontCorrupt', default=False,  help='actually corrupt file system',        action='store_true',        dest='dontCorrupt')
+parser.add_option('-s', '--seed',        default=0,     help='첫 번째 난수 시드 (파일 시스템 생성용)', action='store', type='int', dest='seed')
+parser.add_option('-S', '--seedCorrupt', default=0,     help='두 번째 난수 시드 (손상 생성용)', action='store', type='int', dest='seedCorrupt')
+parser.add_option('-i', '--numInodes',   default=16,    help='파일 시스템의 아이노드 수',      action='store', type='int', dest='numInodes')
+parser.add_option('-d', '--numData',     default=16,    help='파일 시스템의 데이터 블록 수', action='store', type='int', dest='numData')
+parser.add_option('-n', '--numRequests', default=15,    help='시뮬레이션할 요청 수',       action='store', type='int', dest='numRequests')
+parser.add_option('-p', '--printFinal',  default=False, help='최종 파일/디렉터리 목록 표시',    action='store_true',        dest='printFinal')
+parser.add_option('-w', '--whichCorrupt',default=-1,    help='특정 손상 유형 지정',             action='store', type='int', dest='whichCorrupt')
+parser.add_option('-c', '--compute',     default=False, help='정답과 계산 결과 표시',               action='store_true',        dest='solve')
+parser.add_option('-D', '--dontCorrupt', default=False,  help='파일 시스템 손상 여부 제어 (이 옵션을 지정하면 손상시키지 않음)',        action='store_true',        dest='dontCorrupt')
 
 (options, args) = parser.parse_args()
 
-print('ARG seed',        options.seed)
-print('ARG seedCorrupt', options.seedCorrupt)
-print('ARG numInodes',   options.numInodes)
-print('ARG numData',     options.numData)
-print('ARG numRequests', options.numRequests)
-print('ARG printFinal',  options.printFinal)
-print('ARG whichCorrupt',options.whichCorrupt)
-print('ARG dontCorrupt', options.dontCorrupt)
+print('설정 난수 시드 (seed)',        options.seed)
+print('설정 손상 생성 시드 (seedCorrupt)', options.seedCorrupt)
+print('설정 아이노드 수 (numInodes)',   options.numInodes)
+print('설정 데이터 블록 수 (numData)',     options.numData)
+print('설정 요청 수 (numRequests)', options.numRequests)
+print('설정 최종 목록 표시 (printFinal)',  options.printFinal)
+print('설정 손상 유형 (whichCorrupt)',options.whichCorrupt)
+print('설정 손상 생성 안 함 (dontCorrupt)', options.dontCorrupt)
 print('')
 
 # to make Python2 and Python3 act the same -- how dumb
@@ -730,3 +731,11 @@ f = fs(options.numInodes, options.numData, options.seedCorrupt, options.solve)
 f.run(options.numRequests, options.dontCorrupt, options.whichCorrupt)
 
 
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 비트맵은 1이면 할당됨, 0이면 비어 있음입니다. 아이노드의 f/d는 파일/디렉터리, a는 데이터 주소, r은 참조 수입니다.
+  - 디렉터리 항목 → 아이노드 → 데이터 블록의 연결과 비트맵의 할당 여부가 서로 맞는지 확인하세요.
+  - 고아(orphan)는 할당되어 있지만 디렉터리에서 연결되지 않는 아이노드입니다. 이 숙제는 손상 찾기 시뮬레이터이며 실제 디스크를 수정하지 않습니다.
+""")

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import math
@@ -105,10 +106,10 @@ class raid:
         self.raid5type = raid5type
 
         if (chunkSize % BLOCKSIZE) != 0:
-            print('chunksize (%d) must be multiple of blocksize (%d): %d' % (chunkSize, BLOCKSIZE, self.chunkSize % BLOCKSIZE))
+            print('청크 크기 (%d)는 블록 크기 (%d)의 배수여야 합니다: %d' % (chunkSize, BLOCKSIZE, self.chunkSize % BLOCKSIZE))
             exit(1)
         if self.raidLevel == 1 and numDisks % 2 != 0:
-            print('raid1: disks (%d) must be a multiple of two' % numDisks)
+            print('RAID 1: 디스크 수 (%d)는 짝수여야 합니다' % numDisks)
             exit(1)
 
         if self.raidLevel == 4:
@@ -131,11 +132,11 @@ class raid:
             else:
                 util = 0.0
             if s[4] == totalTime:
-                print('disk:%d  busy: %.2f  I/Os: %5d (sequential:%d nearly:%d random:%d)' % (d, util, s[0], s[1], s[2], s[3]))
+                print('디스크:%d  사용률: %.2f  I/O 수: %5d (순차:%d 인접:%d 무작위:%d)' % (d, util, s[0], s[1], s[2], s[3]))
             elif s[4] == 0:
-                print('disk:%d  busy:   %.2f  I/Os: %5d (sequential:%d nearly:%d random:%d)' % (d, util, s[0], s[1], s[2], s[3]))
+                print('디스크:%d  사용률:   %.2f  I/O 수: %5d (순차:%d 인접:%d 무작위:%d)' % (d, util, s[0], s[1], s[2], s[3]))
             else:
-                print('disk:%d  busy:  %.2f  I/Os: %5d (sequential:%d nearly:%d random:%d)' % (d, util, s[0], s[1], s[2], s[3]))
+                print('디스크:%d  사용률:  %.2f  I/O 수: %5d (순차:%d 인접:%d 무작위:%d)' % (d, util, s[0], s[1], s[2], s[3]))
 
     # global enqueue function
     def enqueue(self, addr, size, isWrite):
@@ -143,13 +144,13 @@ class raid:
         if self.timing == False:
             if self.solve or self.reverse==False:
                 if isWrite:
-                    print('LOGICAL WRITE to  addr:%d size:%d' % (addr, size * BLOCKSIZE))
+                    print('논리 쓰기  주소:%d 크기:%d' % (addr, size * BLOCKSIZE))
                 else:
-                    print('LOGICAL READ from addr:%d size:%d' % (addr, size * BLOCKSIZE))
+                    print('논리 읽기  주소:%d 크기:%d' % (addr, size * BLOCKSIZE))
                 if self.solve == False:
-                    print('  Physical reads/writes?\n')
+                    print('  어떤 물리 읽기/쓰기가 필요한가요?\n')
             else:
-                print('LOGICAL OPERATION is ?')
+                print('이에 해당하는 논리 동작은?')
 
         # should we print out the physical operations?
         if self.timing == False and (self.solve or self.reverse==True):
@@ -176,14 +177,14 @@ class raid:
     # helper functions
     def doSingleRead(self, disk, off, doNewline=False):
         if self.printPhysical:
-            print('  read  [disk %d, offset %d]  ' % (disk, off), end='')
+            print('  읽기  [디스크 %d, 오프셋 %d]  ' % (disk, off), end='')
             if doNewline:
                 print('')
         self.disks[disk].enqueue(off)
 
     def doSingleWrite(self, disk, off, doNewline=False):
         if self.printPhysical:
-            print('  write [disk %d, offset %d]  ' % (disk, off), end='')
+            print('  쓰기  [디스크 %d, 오프셋 %d]  ' % (disk, off), end='')
             if doNewline:
                 print('')
         self.disks[disk].enqueue(off)
@@ -267,7 +268,7 @@ class raid:
         elif self.raid5type == 'LS':
             disk = (disk - col) % (self.numDisks)
         else:
-            print('error: no such RAID scheme')
+            print('오류: 지원하지 않는 RAID 방식')
             exit(1)
         assert(disk != pdisk)
         return (disk, pdisk, doff)
@@ -362,35 +363,43 @@ class raid:
 #
 parser = OptionParser()
 
-parser.add_option('-s', '--seed',        default=0,      help='the random seed',                                action='store',       type='int',    dest='seed')
-parser.add_option('-D', '--numDisks',    default=4,      help='number of disks in RAID',                        action='store',       type='int',    dest='numDisks') 
-parser.add_option('-C', '--chunkSize',   default='4k',   help='chunk size of the RAID',                         action='store',       type='string', dest='chunkSize') 
-parser.add_option('-n', '--numRequests', default=10,     help='number of requests to simulate',                 action='store',       type='int',    dest='numRequests')
-parser.add_option('-S', '--reqSize',     default='4k',   help='size of requests',                               action='store',       type='string', dest='size')
-parser.add_option('-W', '--workload',    default='rand', help='either "rand" or "seq" workloads',               action='store',       type='string', dest='workload')
-parser.add_option('-w', '--writeFrac',   default=0,      help='write fraction (100->all writes, 0->all reads)', action='store',       type='int',    dest='writeFrac')
-parser.add_option('-R', '--randRange',   default=10000,  help='range of requests (when using "rand" workload)', action='store',       type='int',    dest='range')
-parser.add_option('-L', '--level',       default=0,      help='RAID level (0, 1, 4, 5)',                        action='store',       type='int',    dest='level')
-parser.add_option('-5', '--raid5',       default='LS',   help='RAID-5 left-symmetric "LS" or left-asym "LA"',   action='store',       type='string', dest='raid5type')
-parser.add_option('-r', '--reverse',     default=False,  help='instead of showing logical ops, show physical',  action='store_true',                 dest='reverse')
-parser.add_option('-t', '--timing',      default=False,  help='use timing mode, instead of mapping mode',       action='store_true',                 dest='timing')
-parser.add_option('-c', '--compute',     default=False,  help='compute answers for me',                         action='store_true',                 dest='solve')
+parser.add_option('-s', '--seed',        default=0,      help='난수 시드 (같은 값으로 같은 문제 재현)',                                action='store',       type='int',    dest='seed')
+parser.add_option('-D', '--numDisks',    default=4,      help='RAID의 디스크 수',                        action='store',       type='int',    dest='numDisks')
+parser.add_option('-C', '--chunkSize',   default='4k',   help='RAID 청크 크기',                         action='store',       type='string', dest='chunkSize')
+parser.add_option('-n', '--numRequests', default=10,     help='시뮬레이션할 요청 수',                 action='store',       type='int',    dest='numRequests')
+parser.add_option('-S', '--reqSize',     default='4k',   help='요청 크기',                               action='store',       type='string', dest='size')
+parser.add_option('-W', '--workload',    default='rand', help='작업 부하 유형: rand (무작위), seq (순차)',               action='store',       type='string', dest='workload')
+parser.add_option('-w', '--writeFrac',   default=0,      help='쓰기 비율 (100: 모두 쓰기, 0: 모두 읽기)', action='store',       type='int',    dest='writeFrac')
+parser.add_option('-R', '--randRange',   default=10000,  help='무작위 작업 부하에서 요청 주소 범위', action='store',       type='int',    dest='range')
+parser.add_option('-L', '--level',       default=0,      help='RAID 수준 (0, 1, 4, 5)',                        action='store',       type='int',    dest='level')
+parser.add_option('-5', '--raid5',       default='LS',   help='RAID 5 배치: LS (좌측 대칭), LA (좌측 비대칭)',   action='store',       type='string', dest='raid5type')
+parser.add_option('-r', '--reverse',     default=False,  help='논리 동작 대신 물리 동작을 보여 주고 논리 동작을 문제로 제시',  action='store_true',                 dest='reverse')
+parser.add_option('-t', '--timing',      default=False,  help='주소 매핑 대신 소요 시간 계산 모드 사용',       action='store_true',                 dest='timing')
+parser.add_option('-c', '--compute',     default=False,  help='정답과 계산 결과 표시',                         action='store_true',                 dest='solve')
 
 (options, args) = parser.parse_args()
 
-print('ARG blockSize',   BLOCKSIZE)
-print('ARG seed',        options.seed)
-print('ARG numDisks',    options.numDisks)
-print('ARG chunkSize',   options.chunkSize)
-print('ARG numRequests', options.numRequests)
-print('ARG reqSize',     options.size)
-print('ARG workload',    options.workload)
-print('ARG writeFrac',   options.writeFrac)
-print('ARG randRange',   options.range)
-print('ARG level',       options.level)
-print('ARG raid5',       options.raid5type)
-print('ARG reverse',     options.reverse)
-print('ARG timing',      options.timing)
+print("""
+[각주: 출력 읽는 법]
+  - 논리 주소는 사용자가 보는 주소, 물리 위치는 실제 디스크 번호와 그 디스크 내부 오프셋입니다. 주소·오프셋은 블록 단위, 논리 요청의 크기는 바이트 단위입니다.
+  - 요청 앞에 이름 없이 나오는 두 숫자는 시작 블록 번호와 요청 블록 수입니다.
+  - RAID 0은 분산 저장, RAID 1은 복제, RAID 4/5는 패리티를 사용합니다. 논리 쓰기 하나가 여러 물리 읽기/쓰기로 바뀔 수 있습니다.
+  - 시간 모드의 사용률은 전체 소요 시간 대비 각 디스크가 바빴던 비율(%)입니다. 병렬 동작하므로 디스크별 시간을 단순히 더하면 전체 시간이 되지 않습니다.
+""")
+
+print('설정 블록 크기 (blockSize)',   BLOCKSIZE)
+print('설정 난수 시드 (seed)',        options.seed)
+print('설정 디스크 수 (numDisks)',    options.numDisks)
+print('설정 청크 크기 (chunkSize)',   options.chunkSize)
+print('설정 요청 수 (numRequests)', options.numRequests)
+print('설정 요청 크기 (reqSize)',     options.size)
+print('설정 작업 부하 유형 (workload)',    options.workload)
+print('설정 쓰기 비율 (writeFrac)',   options.writeFrac)
+print('설정 무작위 요청 범위 (randRange)',   options.range)
+print('설정 RAID 수준 (level)',       options.level)
+print('설정 RAID 5 배치 방식 (raid5)',       options.raid5type)
+print('설정 문제와 정답의 표시 방향 반전 (reverse)',     options.reverse)
+print('설정 소요 시간 모드 (timing)',      options.timing)
 print('')
 
 writeFrac = float(options.writeFrac) / 100.0
@@ -400,7 +409,7 @@ random_seed(options.seed)
 
 size = convert(options.size)
 if size % BLOCKSIZE != 0:
-    print('error: request size (%d) must be a multiple of BLOCKSIZE (%d)' % (size, BLOCKSIZE))
+    print('오류: 요청 크기 (%d)는 블록 크기 (%d)의 배수여야 합니다' % (size, BLOCKSIZE))
     exit(1)
 size = int(size / BLOCKSIZE)
 
@@ -409,16 +418,16 @@ if options.workload == 'seq' or options.workload == 's' or options.workload == '
 elif options.workload == 'rand' or options.workload == 'r' or options.workload == 'random':
     workloadIsSequential = False
 else:
-    print('error: workload must be either r/rand/random or s/seq/sequential')
+    print('오류: 작업 부하는 r/rand/random 또는 s/seq/sequential이어야 합니다')
     exit(1)
 
 assert(options.level == 0 or options.level == 1 or options.level == 4 or options.level == 5)
 if options.level != 0 and options.numDisks < 2:
-    print('RAID-4 and RAID-5 need more than 1 disk')
+    print('RAID 4와 RAID 5는 디스크가 2개 이상 필요합니다')
     exit(1)
 
 if options.level == 5 and options.raid5type != 'LA' and options.raid5type != 'LS':
-    print('Only two types of RAID-5 supported: left-asymmetric (LA) and left-symmetric (LS) (%s is not)' % options.raid5type)
+    print('RAID 5는 좌측 비대칭(LA)과 좌측 대칭(LS)만 지원합니다 (%s은(는) 지원하지 않음)' % options.raid5type)
     exit(1)
 
 # instantiate RAID
@@ -452,11 +461,11 @@ if options.solve:
     print('')
     r.stats(t)
     print('')
-    print('STAT totalTime', t)
+    print('통계: 전체 소요 시간', t)
     print('')
 else:
     print('')
-    print('Estimate how long the workload should take to complete.')
-    print('- Roughly how many requests should each disk receive?')
-    print('- How many requests are random, how many sequential?')
+    print('작업 부하가 완료되기까지 걸리는 시간을 추정하세요.')
+    print('- 각 디스크는 대략 몇 개의 요청을 받나요?')
+    print('- 무작위 요청과 순차 요청은 각각 몇 개인가요?')
     print('')

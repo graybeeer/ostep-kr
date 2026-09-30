@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import random
@@ -89,7 +90,7 @@ class malloc:
                 self.freelist.pop(bestIdx)
                 self.addToMap(bestAddr, size)
             else:
-                abort('should never get here')
+                abort('도달하면 안 되는 내부 상태입니다')
             return (bestAddr, count)
 
         # print('*** FAILED TO FIND A SPOT', size)
@@ -133,9 +134,9 @@ class malloc:
         return 0
 
     def dump(self):
-        print('Free List [ Size %d ]: ' % len(self.freelist), end='')
+        print('빈 공간 목록 [ 항목 수 %d ]: ' % len(self.freelist), end='')
         for e in self.freelist:
-            print('[ addr:%d sz:%d ]' % (e[0], e[1]), end='')
+            print('[ 시작 주소:%d 크기:%d ]' % (e[0], e[1]), end='')
         print('')
 
 
@@ -144,38 +145,38 @@ class malloc:
 #
 parser = OptionParser()
 
-parser.add_option('-s', '--seed',        default=0,          help='the random seed',                             action='store', type='int',    dest='seed')
-parser.add_option('-S', '--size',        default=100,        help='size of the heap',                            action='store', type='int',    dest='heapSize') 
-parser.add_option('-b', '--baseAddr',    default=1000,       help='base address of heap',                        action='store', type='int',    dest='baseAddr') 
-parser.add_option('-H', '--headerSize',  default=0,          help='size of the header',                          action='store', type='int',    dest='headerSize')
-parser.add_option('-a', '--alignment',   default=-1,         help='align allocated units to size; -1->no align', action='store', type='int',    dest='alignment')
-parser.add_option('-p', '--policy',      default='BEST',     help='list search (BEST, WORST, FIRST)',            action='store', type='string', dest='policy') 
-parser.add_option('-l', '--listOrder',   default='ADDRSORT', help='list order (ADDRSORT, SIZESORT+, SIZESORT-, INSERT-FRONT, INSERT-BACK)', action='store', type='string', dest='order') 
-parser.add_option('-C', '--coalesce',    default=False,      help='coalesce the free list?',                     action='store_true',           dest='coalesce')
-parser.add_option('-n', '--numOps',      default=10,         help='number of random ops to generate',            action='store', type='int',    dest='opsNum')
-parser.add_option('-r', '--range',       default=10,         help='max alloc size',                              action='store', type='int',    dest='opsRange')
-parser.add_option('-P', '--percentAlloc',default=50,         help='percent of ops that are allocs',              action='store', type='int',    dest='opsPAlloc')
-parser.add_option('-A', '--allocList',   default='',         help='instead of random, list of ops (+10,-0,etc)', action='store', type='string', dest='opsList')
-parser.add_option('-c', '--compute',     default=False,      help='compute answers for me',                      action='store_true',           dest='solve')
+parser.add_option('-s', '--seed',        default=0,          help='난수 시드 (같은 값으로 같은 문제 재현)',                             action='store', type='int',    dest='seed')
+parser.add_option('-S', '--size',        default=100,        help='힙 크기',                            action='store', type='int',    dest='heapSize')
+parser.add_option('-b', '--baseAddr',    default=1000,       help='힙의 시작 주소',                        action='store', type='int',    dest='baseAddr')
+parser.add_option('-H', '--headerSize',  default=0,          help='할당 블록의 헤더 크기',                          action='store', type='int',    dest='headerSize')
+parser.add_option('-a', '--alignment',   default=-1,         help='할당 크기의 정렬 단위 (-1: 정렬하지 않음)', action='store', type='int',    dest='alignment')
+parser.add_option('-p', '--policy',      default='BEST',     help='빈 공간 탐색 정책 (BEST: 가장 작은 적합 공간, WORST: 가장 큰 공간, FIRST: 첫 적합 공간)',            action='store', type='string', dest='policy')
+parser.add_option('-l', '--listOrder',   default='ADDRSORT', help='빈 공간 목록 순서 (ADDRSORT: 주소순, SIZESORT+/-: 크기 오름/내림차순, INSERT-FRONT/BACK: 앞/뒤 삽입)', action='store', type='string', dest='order')
+parser.add_option('-C', '--coalesce',    default=False,      help='목록에서 연속한 인접 빈 공간 병합',                     action='store_true',           dest='coalesce')
+parser.add_option('-n', '--numOps',      default=10,         help='임의 생성할 동작 수',            action='store', type='int',    dest='opsNum')
+parser.add_option('-r', '--range',       default=10,         help='최대 할당 크기',                              action='store', type='int',    dest='opsRange')
+parser.add_option('-P', '--percentAlloc',default=50,         help='전체 동작 중 할당의 비율',              action='store', type='int',    dest='opsPAlloc')
+parser.add_option('-A', '--allocList',   default='',         help='동작 직접 지정 (+10: 크기 10 할당, -0: 첫 할당 해제)', action='store', type='string', dest='opsList')
+parser.add_option('-c', '--compute',     default=False,      help='정답과 계산 결과 표시',                      action='store_true',           dest='solve')
 
 (options, args) = parser.parse_args()
 
 m = malloc(int(options.heapSize), int(options.baseAddr), int(options.headerSize),
            options.policy, options.order, options.coalesce, options.alignment)
 
-print('seed', options.seed)
-print('size', options.heapSize)
-print('baseAddr', options.baseAddr)
-print('headerSize', options.headerSize)
-print('alignment', options.alignment)
-print('policy', options.policy)
-print('listOrder', options.order)
-print('coalesce', options.coalesce)
-print('numOps', options.opsNum)
-print('range', options.opsRange)
-print('percentAlloc', options.opsPAlloc)
-print('allocList', options.opsList)
-print('compute', options.solve)
+print('난수 시드', options.seed)
+print('크기', options.heapSize)
+print('시작 주소', options.baseAddr)
+print('헤더 크기', options.headerSize)
+print('정렬 단위', options.alignment)
+print('정책', options.policy)
+print('목록 순서', options.order)
+print('인접 공간 병합', options.coalesce)
+print('동작 수', options.opsNum)
+print('할당 크기 범위', options.opsRange)
+print('할당 비율', options.opsPAlloc)
+print('동작 목록', options.opsList)
+print('정답 표시', options.solve)
 print('')
 
 percent = int(options.opsPAlloc) / 100.0
@@ -196,11 +197,11 @@ if options.opsList == '':
             if ptr != -1:
                 p[c] = ptr
                 L.append(c)
-            print('ptr[%d] = Alloc(%d)' % (c, size), end='')
+            print('ptr[%d] = 할당(%d)' % (c, size), end='')
             if options.solve == True:
-                print(' returned %d (searched %d elements)' % (ptr + options.headerSize, cnt))
+                print(' 반환값 %d (탐색한 항목 %d개)' % (ptr + options.headerSize, cnt))
             else:
-                print(' returned ?')
+                print(' 반환값 ?')
             c += 1
             j += 1
             pr = True
@@ -209,11 +210,11 @@ if options.opsList == '':
                 # pick random one to delete
                 d = int(random.random() * len(L))
                 rc = m.free(p[L[d]])
-                print('Free(ptr[%d])' % L[d], )
+                print('해제(ptr[%d])' % L[d], )
                 if options.solve == True:
-                    print('returned %d' % rc)
+                    print('반환값 %d' % rc)
                 else:
-                    print('returned ?')
+                    print('반환값 ?')
                 del p[L[d]]
                 del L[d]
                 # print('DEBUG p', p)
@@ -224,7 +225,7 @@ if options.opsList == '':
             if options.solve == True:
                 m.dump()
             else:
-                print('List? ')
+                print('빈 공간 목록은? ')
             print('')
 else:
     c = 0
@@ -235,28 +236,38 @@ else:
             ptr, cnt = m.malloc(size)
             if ptr != -1:
                 p[c] = ptr
-            print('ptr[%d] = Alloc(%d)' % (c, size), end='')
+            print('ptr[%d] = 할당(%d)' % (c, size), end='')
             if options.solve == True:
-                print(' returned %d (searched %d elements)' % (ptr, cnt))
+                print(' 반환값 %d (탐색한 항목 %d개)' % (ptr, cnt))
             else:
-                print(' returned ?')
+                print(' 반환값 ?')
             c += 1
         elif op[0] == '-':
             # free
             index = int(op.split('-')[1])
             if index >= len(p):
-                print('Invalid Free: Skipping')
+                print('잘못된 해제 요청: 건너뜁니다')
                 continue
-            print('Free(ptr[%d])' % index, )
+            print('해제(ptr[%d])' % index, )
             rc = m.free(p[index])
             if options.solve == True:
-                print('returned %d' % rc)
+                print('반환값 %d' % rc)
             else:
-                print('returned ?')
+                print('반환값 ?')
         else:
-            abort('badly specified operand: must be +Size or -Index')
+            abort('잘못된 피연산자: +크기 또는 -인덱스 형식이어야 합니다')
         if options.solve == True:
             m.dump()
         else:
-            print('List?')
+            print('빈 공간 목록은?')
         print('')
+
+# Korean reading guide; simulator state is unchanged.
+print("""
+[각주: 출력 읽는 법]
+  - 빈 공간 목록의 항목 수는 빈 구간 개수이며 남은 바이트 수가 아닙니다. 각 항목은 시작 주소와 연속한 빈 공간 크기를 나타냅니다.
+  - 내부 할당 결과 -1은 실패입니다. 동작 목록을 직접 지정한 모드(-A)는 이 값 또는 할당 블록 시작 주소를 표시합니다.
+  - 원본의 임의 생성 모드는 표시할 때 헤더 크기를 더합니다. 따라서 헤더가 0이 아니면 성공 시 데이터 시작 주소, 실패 시에도 (-1 + 헤더 크기)가 표시됩니다.
+  - 해제 반환값은 0이면 성공, -1이면 실패입니다. 탐색한 항목 수는 할당 위치를 찾기 위해 확인한 빈 구간 수입니다.
+  - 총 빈 공간이 충분해도 큰 연속 공간이 없으면 할당에 실패할 수 있습니다(외부 단편화). 헤더·정렬로 요청 크기보다 더 많은 공간을 쓸 수 있습니다.
+""")
