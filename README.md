@@ -35,6 +35,46 @@ cd ostep-kr
 
 원본: [remzi-arpacidusseau/ostep-homework](https://github.com/remzi-arpacidusseau/ostep-homework/). 원본 저자와 Git 이력을 유지한 학습용 한국어 버전입니다. C 실습 코드와 GUI 내부 문구는 원문으로 남아 있습니다.
 
+## 한국어 숙제 README
+
+원본 숙제 README 31개에 대응하는 한국어 문서를 추가했습니다. 각 폴더의 `README-kr.md`를 읽으세요. 프로세스 API의 추가 문서는 `README-fork-kr.md`, `README-generator-kr.md`입니다. 영어 원문에서도 한국어 문서로 이동할 수 있습니다.
+
+설명과 옵션 해설은 한국어로 번역했으며, 명령어·코드·출력 예시는 원문과 대조할 수 있도록 유지했습니다. 따라서 문서 속 예시 출력에는 영어가 남아 있지만, 이 저장소의 Python 도구는 기본적으로 한국어 설명을 출력합니다. 원문의 오타나 현재 코드와 다른 설명은 번역자 주로 안내합니다.
+
+| 주제 | 한국어 문서 |
+| --- | --- |
+| 프로세스와 I/O | [cpu-intro](cpu-intro/README-kr.md) |
+| 프로세스 API | [개요](cpu-api/README-kr.md) · [프로세스 트리](cpu-api/README-fork-kr.md) · [C 코드 생성기](cpu-api/README-generator-kr.md) |
+| 기본 CPU 스케줄링 | [cpu-sched](cpu-sched/README-kr.md) |
+| MLFQ 스케줄링 | [cpu-sched-mlfq](cpu-sched-mlfq/README-kr.md) |
+| 추첨 스케줄링 | [cpu-sched-lottery](cpu-sched-lottery/README-kr.md) |
+| 다중 CPU 스케줄링 | [cpu-sched-multi](cpu-sched-multi/README-kr.md) |
+| 주소 재배치 | [vm-mechanism](vm-mechanism/README-kr.md) |
+| 세그멘테이션 | [vm-segmentation](vm-segmentation/README-kr.md) |
+| 빈 공간 관리 | [vm-freespace](vm-freespace/README-kr.md) |
+| 페이징 | [vm-paging](vm-paging/README-kr.md) |
+| 다단계 페이지 테이블 | [vm-smalltables](vm-smalltables/README-kr.md) |
+| 물리 메모리와 스왑 | [vm-beyondphys](vm-beyondphys/README-kr.md) |
+| 페이지 교체 정책 | [vm-beyondphys-policy](vm-beyondphys-policy/README-kr.md) |
+| 스레드 기초 | [threads-intro](threads-intro/README-kr.md) |
+| 스레드 API | [threads-api](threads-api/README-kr.md) |
+| 락 | [threads-locks](threads-locks/README-kr.md) |
+| 조건 변수 | [threads-cv](threads-cv/README-kr.md) |
+| 세마포어 | [threads-sema](threads-sema/README-kr.md) |
+| 동시성 버그 | [threads-bugs](threads-bugs/README-kr.md) |
+| 디스크 | [file-disks](file-disks/README-kr.md) |
+| RAID | [file-raid](file-raid/README-kr.md) |
+| 파일 시스템 구현 | [file-implementation](file-implementation/README-kr.md) |
+| FFS | [file-ffs](file-ffs/README-kr.md) |
+| 파일 시스템 일관성 | [file-journaling](file-journaling/README-kr.md) |
+| 로그 구조 파일 시스템 | [file-lfs](file-lfs/README-kr.md) |
+| SSD | [file-ssd](file-ssd/README-kr.md) |
+| 체크섬과 데이터 무결성 | [file-integrity](file-integrity/README-kr.md) |
+| NFS 추적 자료 | [dist-nfs](dist-nfs/README-kr.md) |
+| AFS 캐시 일관성 | [dist-afs](dist-afs/README-kr.md) |
+
+Python 예제는 해당 숙제 폴더에서 `python3 파일명.py ...`로 실행할 수 있습니다. 원문의 `prompt>` 등 셸 프롬프트는 입력하지 마세요. 저장소 최상위에서는 앞에서 소개한 `./run-ko.sh 폴더/파일명.py ...`를 사용하면 됩니다. C 실습은 각 문서의 빌드 안내를 따르세요.
+
 ---
 
 # Original Homeworks

@@ -1,3 +1,5 @@
+[한국어 README](README-generator-kr.md)
+
 
 # Overview: `generator.py`
 
